@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruz Azul ERP - Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: linear-gradient(135deg, #0b3d6b, #1a6fb5); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 420px; }
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo h1 { color: #0b3d6b; font-size: 24px; }
+    .logo p { color: #666; font-size: 14px; margin-top: 4px; }
+    .step-info { text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }
+    .step-info.active { color: #1a6fb5; font-weight: 600; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; font-weight: 500; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border 0.2s; }
+    .form-group input:focus { border-color: #1a6fb5; outline: none; }
+    .btn { width: 100%; padding: 12px; background: #0b3d6b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    .btn:hover { background: #1a6fb5; }
+    .btn:disabled { background: #999; cursor: not-allowed; }
+    .error { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+    .success { color: #27ae60; font-size: 13px; margin-top: 8px; display: none; }
+    .hidden { display: none; }
+    .loader { text-align: center; margin: 12px 0; display: none; }
+    .loader::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #0b3d6b; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>FarmCruzAzul</h1>
+      <p>Portal de Autenticación</p>
+    </div>
+
+    <div class="step-info" id="stepDisplay">Paso 1: Ingrese sus credenciales</div>
+
+    <!-- Paso 1: Login -->
+    <div id="step1">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="username" placeholder="Ingrese su usuario" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" placeholder="Ingrese su contraseña" autocomplete="current-password">
+      </div>
+      <button class="btn" id="loginBtn" onclick="step1Login()">Iniciar Sesión</button>
+      <div class="error" id="loginError"></div>
+    </div>
+
+    <!-- Paso 2: MFA -->
+    <div id="step2" class="hidden">
+      <div class="form-group">
+        <label>Código MFA</label>
+        <input type="text" id="mfaCode" placeholder="Ingrese código de 6 dígitos" maxlength="6">
+      </div>
+      <button class="btn" id="mfaBtn" onclick="step2Mfa()">Verificar Código</button>
+      <div class="error" id="mfaError"></div>
+    </div>
+
+    <!-- Paso 3: Admin (solo 3er factor) -->
+    <div id="step3" class="hidden">
+      <div class="form-group">
+        <label>Código de Administración (3er Factor)</label>
+        <input type="password" id="adminCode" placeholder="Ingrese código de administración">
+      </div>
+      <button class="btn" id="adminBtn" onclick="step3Admin()">Verificar Admin</button>
+      <div class="error" id="adminError"></div>
+    </div>
+
+    <div class="loader" id="loader"></div>
+    <div class="success" id="successMsg"></div>
+  </div>
+
+  <script>
+    let partialToken = '';
+    let mfaToken = '';
+
+    function showError(id, msg) {
+      document.getElementById(id).textContent = msg;
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function hideErrors() {
+      document.querySelectorAll('.error').forEach(e => e.style.display = 'none');
+    }
+
+    function showLoader(show) {
+      document.getElementById('loader').style.display = show ? 'block' : 'none';
+    }
+
+    async function step1Login() {
+      hideErrors();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if (!username || !password) { showError('loginError', 'Complete todos los campos'); return; }
+
+      showLoader(true);
+      document.getElementById('loginBtn').disabled = true;
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError('loginError', data.error);
+          document.getElementById('loginBtn').disabled = false;
+          showLoader(false);
+          return;
+        }
+
+        partialToken = data.partialToken;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('stepDisplay').textContent = 'Paso 2: Verifique su código MFA';
+        document.getElementById('loginBtn').disabled = false;
+        showLoader(false);
+      } catch (err) {
+        showError('loginError', 'Error de conexión');
+        document.getElementById('loginBtn').disabled = false;
+        showLoader(false);
+      }
+    }
+
+    async function step2Mfa() {
+      hideErrors();
+      const mfaCode = document.getElementById('mfaCode').value;
+      if (!mfaCode) { showError('mfaError', 'Ingrese el código MFA'); return; }
+
+      showLoader(true);
+      document.getElementById('mfaBtn').disabled = true;
+
+      try {
+        const res = await fetch('/auth/verify-mfa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${partialToken}` },
+          body: JSON.stringify({ mfaCode }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError('mfaError', data.error);
+          document.getElementById('mfaBtn').disabled = false;
+          showLoader(false);
+          return;
+        }
+
+        if (data.requiresThirdFactor) {
+          mfaToken = data.mfaToken;
+          document.getElementById('step2').classList.add('hidden');
+          document.getElementById('step3').classList.remove('hidden');
+          document.getElementById('stepDisplay').textContent = 'Paso 3: Código de Administración (3er Factor)';
+        } else {
+          localStorage.setItem('token', data.token);
+          window.location.href = data.redirectTo;
+        }
+        document.getElementById('mfaBtn').disabled = false;
+        showLoader(false);
+      } catch (err) {
+        showError('mfaError', 'Error de conexión');
+        document.getElementById('mfaBtn').disabled = false;
+        showLoader(false);
+      }
+    }
+
+    async function step3Admin() {
+      hideErrors();
+      const adminCode = document.getElementById('adminCode').value;
+      if (!adminCode) { showError('adminError', 'Ingrese el código de administración'); return; }
+
+      showLoader(true);
+      document.getElementById('adminBtn').disabled = true;
+
+      try {
+        const res = await fetch('/auth/verify-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${mfaToken}` },
+          body: JSON.stringify({ adminCode }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError('adminError', data.error);
+          document.getElementById('adminBtn').disabled = false;
+          showLoader(false);
+          return;
+        }
+
+        localStorage.setItem('token', data.token);
+        window.location.href = data.redirectTo;
+        document.getElementById('adminBtn').disabled = false;
+        showLoader(false);
+      } catch (err) {
+        showError('adminError', 'Error de conexión');
+        document.getElementById('adminBtn').disabled = false;
+        showLoader(false);
+      }
+    }
+  </script>
+</body>
+</html>

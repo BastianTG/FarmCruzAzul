@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruz Azul ERP - Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f0f2f5; min-height: 100vh; }
+    nav { background: #0b3d6b; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    nav h2 { font-size: 18px; }
+    nav .user-info { display: flex; align-items: center; gap: 16px; }
+    nav .user-info span { font-size: 14px; }
+    .btn-logout { padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .btn-logout:hover { background: #c0392b; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
+    .welcome-card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .welcome-card h1 { font-size: 22px; color: #0b3d6b; margin-bottom: 8px; }
+    .welcome-card p { color: #666; font-size: 14px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+    .stat-card h3 { font-size: 28px; color: #0b3d6b; }
+    .stat-card p { font-size: 13px; color: #888; margin-top: 4px; }
+    .section-title { font-size: 18px; color: #333; margin-bottom: 16px; }
+    .recursos-table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .recursos-table th, .recursos-table td { padding: 12px 20px; text-align: left; font-size: 14px; }
+    .recursos-table th { background: #f7f9fc; color: #555; font-weight: 600; }
+    .recursos-table td { border-top: 1px solid #eee; }
+    .recursos-table tr:hover td { background: #f8faff; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-user { background: #e8f5e9; color: #2e7d32; }
+    .badge-admin { background: #fff3e0; color: #e65100; }
+    .badge-report { background: #e3f2fd; color: #1565c0; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>FarmCruzAzul ERP</h2>
+    <div class="user-info">
+      <span id="userDisplay">Usuario</span>
+      <span class="badge" id="roleBadge">user</span>
+      <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="welcome-card">
+      <h1 id="welcomeMsg">Bienvenido</h1>
+      <p>Panel de control - Portal de Autenticación MFA</p>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <h3 class="section-title">Recursos Disponibles</h3>
+    <table class="recursos-table">
+      <thead>
+        <tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Acción</th></tr>
+      </thead>
+      <tbody id="recursosBody"></tbody>
+    </table>
+
+    <div id="adminSection" class="hidden" style="margin-top: 24px;">
+      <h3 class="section-title">Administración</h3>
+      <table class="recursos-table">
+        <thead>
+          <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Rol</th><th>Creación</th></tr>
+        </thead>
+        <tbody id="usuariosBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/'; }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) { logout(); return; }
+        const data = await res.json();
+
+        document.getElementById('userDisplay').textContent = data.message;
+        document.getElementById('welcomeMsg').textContent = data.message;
+
+        const badge = document.getElementById('roleBadge');
+        badge.textContent = data.role;
+        badge.className = data.role === 'admin' ? 'badge badge-admin' : 'badge badge-user';
+
+        const statsGrid = document.getElementById('statsGrid');
+        statsGrid.innerHTML = '';
+        Object.entries(data.stats).forEach(([key, val]) => {
+          const card = document.createElement('div');
+          card.className = 'stat-card';
+          card.innerHTML = `<h3>${val}</h3><p>${key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</p>`;
+          statsGrid.appendChild(card);
+        });
+
+        const recursosBody = document.getElementById('recursosBody');
+        recursosBody.innerHTML = '';
+        data.recursos.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${r.id}</td><td>${r.nombre}</td><td><span class="badge badge-report">${r.tipo}</span></td><td><a href="${r.url}" style="color:#1a6fb5;">Acceder</a></td>`;
+          recursosBody.appendChild(tr);
+        });
+
+        if (data.role === 'admin') {
+          document.getElementById('adminSection').classList.remove('hidden');
+          loadUsuarios();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function loadUsuarios() {
+      try {
+        const res = await fetch('/api/usuarios', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const usuarios = await res.json();
+        const tbody = document.getElementById('usuariosBody');
+        tbody.innerHTML = '';
+        usuarios.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.email}</td><td><span class="badge ${u.rol === 'admin' ? 'badge-admin' : 'badge-user'}">${u.rol}</span></td><td>${new Date(u.created_at).toLocaleDateString()}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

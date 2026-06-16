@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruz Azul ERP - Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f0f2f5; min-height: 100vh; }
+    nav { background: #0b3d6b; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    nav h2 { font-size: 18px; }
+    .user-info { display: flex; align-items: center; gap: 16px; }
+    .btn-logout { padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .btn-logout:hover { background: #c0392b; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card h2 { color: #0b3d6b; font-size: 20px; margin-bottom: 8px; }
+    .card p { color: #666; font-size: 14px; }
+    .card .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .card .info-item { padding: 12px; background: #f7f9fc; border-radius: 8px; }
+    .card .info-item label { font-size: 12px; color: #888; display: block; }
+    .card .info-item span { font-size: 14px; color: #333; font-weight: 500; }
+    table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+    th, td { padding: 12px 20px; text-align: left; font-size: 14px; }
+    th { background: #f7f9fc; color: #555; font-weight: 600; }
+    td { border-top: 1px solid #eee; }
+    tr:hover td { background: #f8faff; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-success { background: #e8f5e9; color: #2e7d32; }
+    .badge-warning { background: #fff3e0; color: #e65100; }
+    .btn-primary { padding: 10px 20px; background: #0b3d6b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-primary:hover { background: #1a6fb5; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>FarmCruzAzul ERP — Admin</h2>
+    <div class="user-info">
+      <span id="userDisplay">Admin</span>
+      <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>Panel de Administración (3 Factores)</h2>
+      <p>Has accedido con autenticación de 3 factores. Aquí puedes gestionar la infraestructura.</p>
+      <div class="info-grid">
+        <div class="info-item"><label>Estado Conexión RDS</label><span id="rdsStatus">Verificando...</span></div>
+        <div class="info-item"><label>Último Backup S3</label><span id="backupStatus">Consultando...</span></div>
+        <div class="info-item"><label>Instancia EC2</label><span>Activa</span></div>
+        <div class="info-item"><label>Security Group</label><span>Restringido</span></div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:12px;color:#333;">Backups RDS → S3</h3>
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>Archivo</th><th>Tamaño</th><th>Estado</th></tr>
+      </thead>
+      <tbody id="backupsBody"></tbody>
+    </table>
+
+    <div style="text-align:right;">
+      <button class="btn-primary" onclick="window.location.href='/dashboard.html'">Ir al Dashboard</button>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/'; }
+
+    async function loadAdmin() {
+      try {
+        const me = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!me.ok) { logout(); return; }
+        const userData = await me.json();
+        if (userData.user.rol !== 'admin') { window.location.href = '/dashboard.html'; return; }
+        document.getElementById('userDisplay').textContent = `Admin: ${userData.user.username}`;
+
+        const backupsRes = await fetch('/api/backups', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (backupsRes.ok) {
+          const data = await backupsRes.json();
+          const tbody = document.getElementById('backupsBody');
+          tbody.innerHTML = '';
+          data.backups.forEach(b => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${b.fecha}</td><td>${b.archivo}</td><td>${b.tamano}</td><td><span class="badge badge-success">Completado</span></td>`;
+            tbody.appendChild(tr);
+          });
+          document.getElementById('rdsStatus').textContent = 'Conectado';
+          document.getElementById('backupStatus').textContent = data.backups[0].fecha;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+
+    loadAdmin();
+  </script>
+</body>
+</html>
