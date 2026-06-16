@@ -1,8 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const pool = require('../config/db');
-const { authenticatePartialToken } = require('../middleware/auth');
+const { authenticatePartialToken, authenticateToken } = require('../middleware/auth');
 require('dotenv').config();
 
 const router = express.Router();
@@ -42,39 +44,78 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /auth/verify-mfa — Paso 2: código MFA (2do factor)
+// POST /auth/setup-mfa — Generar secreto TOTP y QR para Google Authenticator
+router.post('/setup-mfa', authenticateToken, async (req, res) => {
+  try {
+    const secret = speakeasy.generateSecret({
+      name: `FarmCruzAzul:${req.user.username}`,
+    });
+
+    await pool.query('UPDATE usuarios SET mfa_secret = $1 WHERE id = $2', [secret.base32, req.user.id]);
+
+    const otpauthUrl = secret.otpauth_url;
+    const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+    res.json({
+      message: 'MFA configurado. Escanea el QR con Google Authenticator.',
+      secret: secret.base32,
+      qrCode: qrDataUrl,
+    });
+  } catch (err) {
+    console.error('Error en setup-mfa:', err);
+    res.status(500).json({ error: 'Error al configurar MFA' });
+  }
+});
+
+// POST /auth/verify-mfa — Paso 2: código TOTP (Google Authenticator)
 router.post('/verify-mfa', authenticatePartialToken, async (req, res) => {
   const { mfaCode } = req.body;
   if (!mfaCode) {
     return res.status(400).json({ error: 'Código MFA requerido' });
   }
 
-  // En producción: verificar con TOTP (speakeasy) o código enviado por email/SMS
-  // Para demo: validación simple
-  if (mfaCode !== '123456') {
-    return res.status(401).json({ error: 'Código MFA inválido' });
-  }
+  try {
+    const result = await pool.query('SELECT mfa_secret FROM usuarios WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0 || !result.rows[0].mfa_secret) {
+      return res.status(401).json({ error: 'MFA no configurado. Usa /auth/setup-mfa primero.' });
+    }
 
-  // Si es admin, requiere un 3er factor
-  if (req.user.rol === 'admin') {
-    const partialPayload = { id: req.user.id, username: req.user.username, rol: req.user.rol, mfaVerified: true };
-    const mfaToken = jwt.sign(partialPayload, process.env.JWT_PARTIAL_SECRET, { expiresIn: '5m' });
-    return res.json({
-      message: 'MFA verificado. Admin requiere tercer factor.',
-      mfaToken,
-      requiresThirdFactor: true,
+    const secret = result.rows[0].mfa_secret;
+    const verified = speakeasy.totp.verify({
+      secret: secret,
+      encoding: 'base32',
+      token: mfaCode,
+      window: 1,
     });
+
+    if (!verified) {
+      return res.status(401).json({ error: 'Código MFA inválido' });
+    }
+
+    // Si es admin, requiere un 3er factor
+    if (req.user.rol === 'admin') {
+      const partialPayload = { id: req.user.id, username: req.user.username, rol: req.user.rol, mfaVerified: true };
+      const mfaToken = jwt.sign(partialPayload, process.env.JWT_PARTIAL_SECRET, { expiresIn: '5m' });
+      return res.json({
+        message: 'MFA verificado. Admin requiere tercer factor.',
+        mfaToken,
+        requiresThirdFactor: true,
+      });
+    }
+
+    // Usuario normal: genera token completo
+    const fullPayload = { id: req.user.id, username: req.user.username, rol: req.user.rol };
+    const fullToken = jwt.sign(fullPayload, process.env.JWT_SECRET, { expiresIn: process.env.SESSION_EXPIRY || '1h' });
+
+    res.json({
+      message: 'Autenticación exitosa (2 factores)',
+      token: fullToken,
+      redirectTo: '/dashboard.html',
+    });
+  } catch (err) {
+    console.error('Error en verify-mfa:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
-
-  // Usuario normal: genera token completo
-  const fullPayload = { id: req.user.id, username: req.user.username, rol: req.user.rol };
-  const fullToken = jwt.sign(fullPayload, process.env.JWT_SECRET, { expiresIn: process.env.SESSION_EXPIRY || '1h' });
-
-  res.json({
-    message: 'Autenticación exitosa (2 factores)',
-    token: fullToken,
-    redirectTo: '/dashboard.html',
-  });
 });
 
 // POST /auth/verify-admin — Paso 3: tercer factor solo admin
