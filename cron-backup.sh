@@ -1,27 +1,25 @@
 #!/bin/bash
 # Script de backup automático RDS PostgreSQL → S3
-# Obtiene credenciales desde AWS Secrets Manager
-# Ejecutar via cron: 0 0 * * * /srv/cruz_azul-erp/cron-backup.sh
+# Lee credenciales desde el archivo .env del proyecto
+# Ejecutar: sudo bash /srv/cruz_azul-erp/cron-backup.sh
 
-set -e
+set -a
+source /srv/cruz_azul-erp/.env
+set +a
 
-SECRET_ARN="arn:aws:secretsmanager:us-east-1:295679480777:secret:rds!db-4f5112ef-aa8c-4609-b386-2e0ecd700db5-w90KdL"
 S3_BUCKET="cruz-azul-bd-bucket"
 BACKUP_DIR="/tmp/backups"
 
 mkdir -p "$BACKUP_DIR"
 
-echo "[$(date)] Obteniendo credenciales desde AWS Secrets Manager..."
-SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query SecretString --output text)
-
-DB_HOST=$(echo "$SECRET_JSON" | jq -r '.host')
-DB_PORT=$(echo "$SECRET_JSON" | jq -r '.port')
-DB_NAME=$(echo "$SECRET_JSON" | jq -r '.dbname')
-DB_USER=$(echo "$SECRET_JSON" | jq -r '.username')
-DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r '.password')
+DB_HOST="${DB_HOST}"
+DB_PORT="${DB_PORT:-5432}"
+DB_NAME="${DB_NAME}"
+DB_USER="${DB_USER}"
+DB_PASSWORD="${DB_PASSWORD}"
 
 if [ -z "$DB_HOST" ] || [ -z "$DB_PASSWORD" ]; then
-    echo "[$(date)] ERROR: No se pudieron obtener las credenciales de Secrets Manager"
+    echo "[$(date)] ERROR: Variables de entorno no configuradas en .env"
     exit 1
 fi
 
