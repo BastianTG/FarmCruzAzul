@@ -62,6 +62,16 @@
     .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
     .badge-pendiente { background: #fff3e0; color: #e65100; }
     .badge-completada { background: #e8f5e9; color: #2e7d32; }
+    .mfa-section { text-align: center; padding: 20px; }
+    .mfa-section img { max-width: 200px; margin: 12px 0; }
+    .mfa-section .secret { font-family: monospace; font-size: 14px; color: #555; background: #f5f5f5; padding: 8px 12px; border-radius: 6px; display: inline-block; margin: 8px 0; }
+    .mfa-section .btn-primary { width: auto; padding: 10px 24px; margin-top: 8px; }
+    .mfa-verify { margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; }
+    .mfa-verify input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; text-align: center; letter-spacing: 4px; width: 160px; }
+    .mfa-verify .btn-primary { width: auto; padding: 8px 20px; margin-top: 8px; }
+    .mfa-status { margin: 8px 0; font-size: 14px; }
+    .mfa-status .active { color: #2e7d32; font-weight: 600; }
+    .mfa-status .inactive { color: #e65100; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -77,6 +87,7 @@
     <div class="tabs">
       <button class="active" onclick="switchTab('productos', this)">Productos</button>
       <button onclick="switchTab('ordenes', this)">Mis Órdenes</button>
+      <button onclick="switchTab('config', this)">Configuración</button>
     </div>
 
     <div id="tabProductos" class="tab-content active">
@@ -85,6 +96,27 @@
 
     <div id="tabOrdenes" class="tab-content">
       <div id="ordenesList"></div>
+    </div>
+
+    <div id="tabConfig" class="tab-content">
+      <div class="card">
+        <h3>Autenticación de Dos Factores (MFA)</h3>
+        <p style="color:#666;font-size:14px;margin-bottom:12px;">Protege tu cuenta con Google Authenticator. Escanea el código QR con la app.</p>
+        <div class="mfa-status" id="mfaStatus">Cargando...</div>
+        <div id="mfaSetupSection" class="hidden">
+          <div class="mfa-section">
+            <div id="mfaQrContainer"></div>
+            <div class="secret" id="mfaSecret"></div>
+            <div class="mfa-verify">
+              <p style="font-size:13px;color:#555;margin-bottom:8px;">Ingresa el código de 6 dígitos de la app para confirmar:</p>
+              <input type="text" id="mfaVerifyCode" maxlength="6" placeholder="000000">
+              <button class="btn-primary" onclick="verifyMfaSetup()">Confirmar</button>
+              <div class="error" id="mfaSetupError" style="margin-top:8px;"></div>
+              <div class="success" id="mfaSetupSuccess" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -272,9 +304,59 @@
       } catch (err) { logout(); }
     }
 
+    async function checkMfaStatus() {
+      try {
+        const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const hasMfa = data.user.mfa_secret && data.user.mfa_secret.length > 0;
+        document.getElementById('mfaStatus').innerHTML = hasMfa
+          ? 'Estado: <span class="active">Activado</span>'
+          : 'Estado: <span class="inactive">No configurado</span>';
+        if (!hasMfa) {
+          const setupRes = await fetch('/auth/setup-mfa', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          const setupData = await setupRes.json();
+          if (setupRes.ok) {
+            document.getElementById('mfaSetupSection').classList.remove('hidden');
+            document.getElementById('mfaQrContainer').innerHTML = `<img src="${setupData.qrCode}" alt="QR Code">`;
+            document.getElementById('mfaSecret').textContent = `Secreto: ${setupData.secret}`;
+          }
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function verifyMfaSetup() {
+      const code = document.getElementById('mfaVerifyCode').value;
+      if (!code || code.length !== 6) { document.getElementById('mfaSetupError').textContent = 'Ingresa el código de 6 dígitos'; document.getElementById('mfaSetupError').style.display = 'block'; return; }
+      document.getElementById('mfaSetupError').style.display = 'none';
+      try {
+        const res = await fetch('/auth/verify-mfa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ mfaCode: code }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('mfaSetupSuccess').textContent = 'MFA configurado exitosamente. La próxima vez que inicies sesión se te pedirá el código.';
+          document.getElementById('mfaSetupSuccess').style.display = 'block';
+          document.getElementById('mfaStatus').innerHTML = 'Estado: <span class="active">Activado</span>';
+          document.getElementById('mfaSetupSection').classList.add('hidden');
+        } else {
+          document.getElementById('mfaSetupError').textContent = data.error || 'Código inválido';
+          document.getElementById('mfaSetupError').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('mfaSetupError').textContent = 'Error de conexión';
+        document.getElementById('mfaSetupError').style.display = 'block';
+      }
+    }
+
     loadProfile();
     loadProducts();
     loadOrdenes();
+    checkMfaStatus();
   </script>
 </body>
 </html>
