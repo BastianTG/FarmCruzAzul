@@ -56,6 +56,7 @@
     .badge-enviado { background: #e8f5e9; color: #2e7d32; }
     .badge-admin { background: #fff3e0; color: #e65100; }
     .badge-user { background: #e8f5e9; color: #2e7d32; }
+    .badge-cancelada { background: #fbe9e7; color: #c62828; }
     .mfa-section { text-align: center; padding: 20px; }
     .mfa-section img { max-width: 200px; margin: 12px 0; }
     .mfa-section .secret { font-family: monospace; font-size: 14px; color: #555; background: #f5f5f5; padding: 8px 12px; border-radius: 6px; display: inline-block; margin: 8px 0; }
@@ -67,6 +68,22 @@
     .mfa-status .active { color: #2e7d32; font-weight: 600; }
     .mfa-status .inactive { color: #e65100; font-weight: 600; }
     .hidden { display: none; }
+    .toast { position: fixed; top: 20px; right: 20px; padding: 14px 24px; border-radius: 8px; color: white; font-weight: 500; font-size: 14px; z-index: 9999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .toast-success { background: #2e7d32; }
+    .toast-error { background: #c62828; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+    .stat-card .numero { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+    .stat-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+    .stat-card .sub { font-size: 12px; color: #666; margin-top: 4px; }
+    .stat-card.verde .numero { color: #2e7d32; }
+    .stat-card.rojo .numero { color: #c62828; }
+    .stat-card.azul .numero { color: #1565c0; }
+    .search-bar { margin-bottom: 16px; }
+    .search-bar input { padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 100%; max-width: 400px; }
+    .search-bar input:focus { border-color: #1a6fb5; outline: none; }
+    .btn-sm-danger { padding: 4px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; background: #fbe9e7; color: #c62828; }
+    .btn-sm-danger:hover { background: #ffcccb; }
 
     .orden { border: 1px solid #eee; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
     .orden .header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
@@ -75,6 +92,7 @@
   </style>
 </head>
 <body>
+  <div class="toast" id="toast"></div>
   <nav>
     <h2>FarmCruzAzul — Panel Admin</h2>
     <div class="nav-right">
@@ -85,14 +103,31 @@
 
   <div class="container">
     <div class="tabs">
-      <button class="active" onclick="switchTab('productos', this)">Productos</button>
+      <button class="active" onclick="switchTab('dashboard', this)">Dashboard</button>
+      <button onclick="switchTab('productos', this)">Productos</button>
       <button onclick="switchTab('ordenes', this)">Órdenes</button>
       <button onclick="switchTab('usuarios', this)">Usuarios</button>
       <button onclick="switchTab('config', this)">Configuración</button>
     </div>
 
-    <div id="tabProductos" class="tab-content active">
+    <div id="tabDashboard" class="tab-content active">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card azul"><div class="numero" id="statOrdenes">-</div><div class="label">Órdenes Totales</div></div>
+        <div class="stat-card verde"><div class="numero" id="statVentasHoy">-</div><div class="label">Ventas Hoy</div></div>
+        <div class="stat-card verde"><div class="numero" id="statVentasTotal">-</div><div class="label">Ventas Totales</div></div>
+        <div class="stat-card azul"><div class="numero" id="statProductos">-</div><div class="label">Productos</div></div>
+        <div class="stat-card azul"><div class="numero" id="statUsuarios">-</div><div class="label">Usuarios</div></div>
+        <div class="stat-card rojo"><div class="numero" id="statBajoStock">-</div><div class="label">Stock Bajo (≤5)</div></div>
+      </div>
+      <div class="card">
+        <h3>Órdenes por Estado</h3>
+        <div id="ordenesEstado" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div id="tabProductos" class="tab-content">
       <button class="btn-add" onclick="openProductModal()">+ Nuevo Producto</button>
+      <div class="search-bar"><input type="text" id="searchProductos" placeholder="Buscar producto..." oninput="filterProductos()"></div>
       <table>
         <thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Laboratorio</th><th>Acciones</th></tr></thead>
         <tbody id="productosBody"></tbody>
@@ -104,8 +139,9 @@
     </div>
 
     <div id="tabUsuarios" class="tab-content">
+      <div class="search-bar"><input type="text" id="searchUsuarios" placeholder="Buscar usuario..." oninput="filterUsuarios()"></div>
       <table>
-        <thead><tr><th>ID</th><th>Usuario</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
+        <thead><tr><th>ID</th><th>Usuario</th><th>Email</th><th>MFA</th><th>Rol</th><th>Registro</th><th>Acción</th></tr></thead>
         <tbody id="usuariosBody"></tbody>
       </table>
     </div>
@@ -174,6 +210,7 @@
     if (!token) { window.location.href = '/'; }
 
     function formatPrecio(n) { return '$' + Number(n).toLocaleString('es-CL'); }
+    function showToast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast toast-' + type; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 4000); }
 
     function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
 
@@ -185,27 +222,35 @@
     }
 
     // --- Productos ---
+    let allProductos = [];
     async function loadProductos() {
       try {
         const res = await fetch('/api/productos');
-        const prods = await res.json();
-        const tbody = document.getElementById('productosBody');
-        tbody.innerHTML = '';
-        prods.forEach(p => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${p.id}</td>
-            <td>${p.nombre}</td>
-            <td>${formatPrecio(p.precio)}</td>
-            <td>${p.stock}</td>
-            <td>${p.laboratorio || '-'}</td>
-            <td>
-              <button class="btn-sm btn-edit" onclick="editProduct(${p.id})">Editar</button>
-              <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})">Eliminar</button>
-            </td>`;
-          tbody.appendChild(tr);
-        });
+        allProductos = await res.json();
+        renderProductos(allProductos);
       } catch (err) { console.error(err); }
+    }
+    function renderProductos(lista) {
+      const tbody = document.getElementById('productosBody');
+      tbody.innerHTML = '';
+      lista.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.id}</td>
+          <td>${p.nombre}</td>
+          <td>${formatPrecio(p.precio)}</td>
+          <td>${p.stock}</td>
+          <td>${p.laboratorio || '-'}</td>
+          <td>
+            <button class="btn-sm btn-edit" onclick="editProduct(${p.id})">Editar</button>
+            <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})">Eliminar</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    function filterProductos() {
+      const q = document.getElementById('searchProductos').value.toLowerCase();
+      renderProductos(allProductos.filter(p => p.nombre.toLowerCase().includes(q) || (p.laboratorio||'').toLowerCase().includes(q)));
     }
 
     function openProductModal(prod) {
@@ -298,10 +343,11 @@
           div.innerHTML = `
             <div class="header">
               <span><strong>#${o.id}</strong> — ${o.username} — ${new Date(o.created_at).toLocaleDateString()}</span>
-              <select onchange="updateEstado(${o.id}, this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:12px;font-weight:600;background:${o.estado === 'pendiente' ? '#fff3e0' : o.estado === 'en trámite' ? '#fff8e1' : '#e8f5e9'};color:${o.estado === 'pendiente' ? '#e65100' : o.estado === 'en trámite' ? '#f57f17' : '#2e7d32'}">
+              <select onchange="updateEstado(${o.id}, this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:12px;font-weight:600;background:${o.estado === 'pendiente' ? '#fff3e0' : o.estado === 'en trámite' ? '#fff8e1' : o.estado === 'cancelada' ? '#fbe9e7' : '#e8f5e9'};color:${o.estado === 'pendiente' ? '#e65100' : o.estado === 'en trámite' ? '#f57f17' : o.estado === 'cancelada' ? '#c62828' : '#2e7d32'}">
                 <option value="pendiente" ${o.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
                 <option value="en trámite" ${o.estado === 'en trámite' ? 'selected' : ''}>En trámite</option>
                 <option value="enviado" ${o.estado === 'enviado' ? 'selected' : ''}>Enviado</option>
+                <option value="cancelada" ${o.estado === 'cancelada' ? 'selected' : ''}>Cancelada</option>
               </select>
             </div>
             <div class="items">${o.items.map(i => `${i.nombre} x${i.cantidad} — ${formatPrecio(i.precio_unitario * i.cantidad)}`).join('<br>')}</div>
@@ -312,23 +358,50 @@
     }
 
     // --- Usuarios ---
+    let allUsuarios = [];
+    let usuariosMiId = 0;
     async function loadUsuarios() {
       try {
+        const resMe = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        const meData = await resMe.json();
+        usuariosMiId = meData.user.id;
         const res = await fetch('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } });
-        const usuarios = await res.json();
-        const tbody = document.getElementById('usuariosBody');
-        tbody.innerHTML = '';
-        usuarios.forEach(u => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${u.id}</td>
-            <td>${u.username}</td>
-            <td>${u.email || '-'}</td>
-            <td><span class="badge ${u.rol === 'admin' ? 'badge-admin' : 'badge-user'}">${u.rol}</span></td>
-            <td>${new Date(u.created_at).toLocaleDateString()}</td>`;
-          tbody.appendChild(tr);
-        });
+        allUsuarios = await res.json();
+        renderUsuarios(allUsuarios);
       } catch (err) { console.error(err); }
+    }
+    function renderUsuarios(lista) {
+      const tbody = document.getElementById('usuariosBody');
+      tbody.innerHTML = '';
+      lista.forEach(u => {
+        const tr = document.createElement('tr');
+        const esYo = u.id === usuariosMiId;
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${u.username} ${esYo ? '(tú)' : ''}</td>
+          <td>${u.email || '-'}</td>
+          <td id="mfaU_${u.id}">-</td>
+          <td><span class="badge ${u.rol === 'admin' ? 'badge-admin' : 'badge-user'}">${u.rol}</span></td>
+          <td>${new Date(u.created_at).toLocaleDateString()}</td>
+          <td>${esYo ? '-' : `<button class="btn-sm btn-sm-danger" onclick="resetMfa(${u.id},'${u.username}')">Reset MFA</button>`}</td>`;
+        tbody.appendChild(tr);
+      });
+      allUsuarios.forEach(u => fetch(`/api/usuarios/${u.id}/mfa-status`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null).then(d => { if (d) document.getElementById(`mfaU_${u.id}`).textContent = d.mfa ? 'Sí' : 'No'; }).catch(() => {}));
+    }
+    async function resetMfa(id, username) {
+      if (!confirm(`¿Resetear MFA de "${username}"?`)) return;
+      try {
+        const res = await fetch(`/api/usuarios/${id}/reset-mfa`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) { showToast('Error: ' + data.error, 'error'); return; }
+        showToast(`MFA reseteado para ${username}`, 'success');
+        loadUsuarios();
+      } catch (err) { showToast('Error de conexión', 'error'); }
+    }
+    function filterUsuarios() {
+      const q = document.getElementById('searchUsuarios').value.toLowerCase();
+      renderUsuarios(allUsuarios.filter(u => u.username.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q)));
     }
 
     async function updateEstado(ordenId, estado) {
@@ -403,10 +476,34 @@
       }
     }
 
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+        const s = await res.json();
+        if (!res.ok) return;
+        document.getElementById('statOrdenes').textContent = s.totalOrdenes;
+        document.getElementById('statVentasHoy').textContent = formatPrecio(s.ventasHoy);
+        document.getElementById('statVentasTotal').textContent = formatPrecio(s.ventasTotales);
+        document.getElementById('statProductos').textContent = s.totalProductos;
+        document.getElementById('statUsuarios').textContent = s.totalUsuarios;
+        document.getElementById('statBajoStock').textContent = s.productosBajoStock;
+        const estadosDiv = document.getElementById('ordenesEstado');
+        estadosDiv.innerHTML = '';
+        s.ordenesPorEstado.forEach(e => {
+          const badge = document.createElement('span');
+          badge.className = 'badge badge-' + e.estado.replace(' ', '-');
+          badge.style.cssText = 'padding:8px 16px;font-size:14px;font-weight:600;';
+          badge.textContent = `${e.estado}: ${e.count}`;
+          estadosDiv.appendChild(badge);
+        });
+      } catch (err) { showToast('Error cargando estadísticas', 'error'); }
+    }
+
     loadProfile();
     loadProductos();
     loadOrdenes();
     loadUsuarios();
+    loadStats();
     checkMfaStatus();
   </script>
 </body>
