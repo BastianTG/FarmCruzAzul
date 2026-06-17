@@ -1,0 +1,8 @@
+[Unit]
+Description=Cruz Azul ERP - Backup Diario
+
+[Service]
+Type=oneshot
+User=ec2-user
+Group=ec2-user
+ExecStart=/bin/bash /srv/cruz_azul-erp/cron-backup.sh

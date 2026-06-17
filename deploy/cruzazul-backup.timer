@@ -1,0 +1,10 @@
+[Unit]
+Description=Cruz Azul ERP - Backup Diario (0:00 UTC)
+Requires=cruzazul-backup.service
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
