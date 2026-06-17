@@ -216,4 +216,27 @@ router.get('/ordenes/todas', authenticateToken, requireAdmin, async (req, res) =
   }
 });
 
+// PUT /api/ordenes/:id/estado — Actualizar estado de orden (solo admin)
+router.put('/ordenes/:id/estado', authenticateToken, requireAdmin, async (req, res) => {
+  const { estado } = req.body;
+  const validos = ['pendiente', 'en trámite', 'enviado'];
+  if (!validos.includes(estado)) {
+    return res.status(400).json({ error: 'Estado inválido. Valores: pendiente, en trámite, enviado' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE ordenes SET estado = $1 WHERE id = $2 RETURNING *',
+      [estado, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error actualizando estado:', err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 module.exports = router;

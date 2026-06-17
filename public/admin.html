@@ -52,7 +52,8 @@
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
     .badge-pendiente { background: #fff3e0; color: #e65100; }
-    .badge-completada { background: #e8f5e9; color: #2e7d32; }
+    .badge-en-tramite { background: #fff8e1; color: #f57f17; }
+    .badge-enviado { background: #e8f5e9; color: #2e7d32; }
     .badge-admin { background: #fff3e0; color: #e65100; }
     .badge-user { background: #e8f5e9; color: #2e7d32; }
 
@@ -260,10 +261,15 @@
         ordenes.forEach(o => {
           const div = document.createElement('div');
           div.className = 'orden';
+          const estadoClass = o.estado === 'en trámite' ? 'en-tramite' : o.estado;
           div.innerHTML = `
             <div class="header">
               <span><strong>#${o.id}</strong> — ${o.username} — ${new Date(o.created_at).toLocaleDateString()}</span>
-              <span class="badge badge-${o.estado}">${o.estado}</span>
+              <select onchange="updateEstado(${o.id}, this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:12px;font-weight:600;background:${o.estado === 'pendiente' ? '#fff3e0' : o.estado === 'en trámite' ? '#fff8e1' : '#e8f5e9'};color:${o.estado === 'pendiente' ? '#e65100' : o.estado === 'en trámite' ? '#f57f17' : '#2e7d32'}">
+                <option value="pendiente" ${o.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                <option value="en trámite" ${o.estado === 'en trámite' ? 'selected' : ''}>En trámite</option>
+                <option value="enviado" ${o.estado === 'enviado' ? 'selected' : ''}>Enviado</option>
+              </select>
             </div>
             <div class="items">${o.items.map(i => `${i.nombre} x${i.cantidad} — ${formatPrecio(i.precio_unitario * i.cantidad)}`).join('<br>')}</div>
             <div class="total">Total: ${formatPrecio(o.total)}</div>`;
@@ -290,6 +296,17 @@
           tbody.appendChild(tr);
         });
       } catch (err) { console.error(err); }
+    }
+
+    async function updateEstado(ordenId, estado) {
+      try {
+        const res = await fetch(`/api/ordenes/${ordenId}/estado`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ estado }),
+        });
+        if (!res.ok) { const e = await res.json(); alert('Error: ' + e.error); }
+      } catch (err) { alert('Error de conexión'); }
     }
 
     async function loadProfile() {
