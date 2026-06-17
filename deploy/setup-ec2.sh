@@ -1,19 +1,23 @@
 #!/bin/bash
 # Script de instalación para EC2 Amazon Linux 2023
-# Ejecutar como root o con sudo
+# Ejecutar: sudo bash deploy/setup-ec2.sh
+# (debe ejecutarse desde la raíz del repositorio clonado)
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "[$(date)] Instalando Node.js 22..."
 curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
 dnf install -y nodejs
 
 echo "[$(date)] Instalando dependencias del proyecto..."
-cd /srv/cruz_azul-erp
+cd "$PROJECT_DIR"
 npm install
 
 echo "[$(date)] Configurando variables de entorno..."
-cat > /srv/cruz_azul-erp/.env << 'EOF'
+cat > "$PROJECT_DIR/.env" << 'EOF'
 # --- BD RDS PostgreSQL ---
 DB_HOST=cruzazul-erp-db.cvrinvv3ihzy.us-east-1.rds.amazonaws.com
 DB_PORT=5432
@@ -32,7 +36,7 @@ ADMIN_CODE=admin123
 EOF
 
 echo "[$(date)] Instalando servicio systemd..."
-cp /srv/cruz_azul-erp/deploy/cruzazul-erp.service /etc/systemd/system/
+cp "$SCRIPT_DIR/cruzazul-erp.service" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable cruzazul-erp
 systemctl start cruzazul-erp
