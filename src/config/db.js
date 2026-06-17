@@ -70,16 +70,16 @@ async function initDB() {
     if (parseInt(result.rows[0].count) === 0) {
       await pool.query(`
         INSERT INTO productos (nombre, descripcion, precio, stock, laboratorio, imagen_url) VALUES
-          ('Paracetamol 500mg', 'Analgésico y antitérmico para el alivio del dolor leve a moderado', 2500, 100, 'Lab Chile', 'https://placehold.co/200x200?text=Paracetamol'),
-          ('Ibuprofeno 400mg', 'Antiinflamatorio no esteroidal para dolor y fiebre', 3200, 80, 'Saval', 'https://placehold.co/200x200?text=Ibuprofeno'),
-          ('Amoxicilina 500mg', 'Antibiótico betalactámico para infecciones bacterianas', 4500, 50, 'Andrómaco', 'https://placehold.co/200x200?text=Amoxicilina'),
-          ('Omeprazol 20mg', 'Inhibidor de bomba de protones para reflujo gástrico', 3800, 60, 'Pharma Investi', 'https://placehold.co/200x200?text=Omeprazol'),
-          ('Loratadina 10mg', 'Antihistamínico para alergias y rinitis alérgica', 2100, 120, 'Bagó', 'https://placehold.co/200x200?text=Loratadina'),
-          ('Losartán 50mg', 'Antihipertensivo para el control de la presión arterial', 4200, 70, 'Rider', 'https://placehold.co/200x200?text=Losartan'),
-          ('Salbutamol 100mcg', 'Broncodilatador inhalador para asma y EPOC', 8900, 30, 'GlaxoSmithKline', 'https://placehold.co/200x200?text=Salbutamol'),
-          ('Metformina 850mg', 'Hipoglucemiante oral para diabetes tipo 2', 3600, 90, 'Sanofi', 'https://placehold.co/200x200?text=Metformina'),
-          ('Atorvastatina 20mg', 'Hipolipemiante para reducir colesterol LDL', 5500, 45, 'Pfizer', 'https://placehold.co/200x200?text=Atorvastatina'),
-          ('Vitamina C 1000mg', 'Suplemento vitamínico antioxidante', 1800, 200, 'Natural Life', 'https://placehold.co/200x200?text=Vitamina+C');
+          ('Paracetamol 500mg', 'Analgésico y antitérmico para el alivio del dolor leve a moderado', 2500, 100, 'Lab Chile', 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Medication_Paracetamol.JPG'),
+          ('Ibuprofeno 400mg', 'Antiinflamatorio no esteroidal para dolor y fiebre', 3200, 80, 'Saval', 'https://upload.wikimedia.org/wikipedia/commons/0/07/Ibuprofen_400.jpg'),
+          ('Amoxicilina 500mg', 'Antibiótico betalactámico para infecciones bacterianas', 4500, 50, 'Andrómaco', 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Amoxicillin_500mg_capsules_on_a_plate_%28Sandoz%29.jpg'),
+          ('Omeprazol 20mg', 'Inhibidor de bomba de protones para reflujo gástrico', 3800, 60, 'Pharma Investi', 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Omeprazole_20mg.jpg'),
+          ('Loratadina 10mg', 'Antihistamínico para alergias y rinitis alérgica', 2100, 120, 'Bagó', 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Comprimidos_de_Loratadina.jpg'),
+          ('Losartán 50mg', 'Antihipertensivo para el control de la presión arterial', 4200, 70, 'Rider', 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Lozap_50_mg-12%2C5_mg_tbl.jpg'),
+          ('Salbutamol 100mcg', 'Broncodilatador inhalador para asma y EPOC', 8900, 30, 'GlaxoSmithKline', 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Ventol%C3%ADn_%28Salbutamol%29.jpg'),
+          ('Metformina 850mg', 'Hipoglucemiante oral para diabetes tipo 2', 3600, 90, 'Sanofi', 'https://upload.wikimedia.org/wikipedia/commons/d/db/Metformin_500mg_Tablets.jpg'),
+          ('Atorvastatina 20mg', 'Hipolipemiante para reducir colesterol LDL', 5500, 45, 'Pfizer', 'https://upload.wikimedia.org/wikipedia/commons/d/da/Atorvastatin40mg.jpg'),
+          ('Vitamina C 1000mg', 'Suplemento vitamínico antioxidante', 1800, 200, 'Natural Life', 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Celaskon_500mg_tablets.jpg');
       `);
       console.log('Productos de semilla insertados');
     }
