@@ -3,6 +3,7 @@ node_modules/
 
 # Variables de entorno
 .env
+.gitignore
 
 # Logs
 logs
@@ -16,3 +17,5 @@ Thumbs.db
 # Archivos de documentación local
 PASO_A_PASO.md
 EVA3_TI3053_S3_RDS_N5_C2-3.txt
+architecture.excalidraw
+achitecture.excalidraw.png
