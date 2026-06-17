@@ -1,0 +1,16 @@
+[Unit]
+Description=Cruz Azul ERP - Portal MFA
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/srv/cruz_azul-erp
+Environment=PORT=80
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /srv/cruz_azul-erp/src/server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
