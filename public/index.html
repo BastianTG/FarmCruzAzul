@@ -3,104 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cruz Azul ERP - Login</title>
+  <title>FarmCruzAzul - Catálogo</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: linear-gradient(135deg, #0b3d6b, #1a6fb5); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 420px; }
-    .logo { text-align: center; margin-bottom: 24px; }
-    .logo h1 { color: #0b3d6b; font-size: 24px; }
-    .logo p { color: #666; font-size: 14px; margin-top: 4px; }
-    .step-info { text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }
-    .step-info.active { color: #1a6fb5; font-weight: 600; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; font-weight: 500; }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border 0.2s; }
-    .form-group input:focus { border-color: #1a6fb5; outline: none; }
-    .btn { width: 100%; padding: 12px; background: #0b3d6b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-    .btn:hover { background: #1a6fb5; }
-    .btn:disabled { background: #999; cursor: not-allowed; }
-    .error { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
-    .success { color: #27ae60; font-size: 13px; margin-top: 8px; display: none; }
-    .hidden { display: none; }
+    body { background: #f0f2f5; }
+    nav { background: #0b3d6b; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    nav h2 { font-size: 20px; }
+    nav .nav-links { display: flex; gap: 12px; }
+    nav .nav-links button { padding: 8px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-login { background: white; color: #0b3d6b; }
+    .btn-login:hover { background: #e8f0fe; }
+    .btn-register { background: transparent; color: white; border: 2px solid white !important; }
+    .btn-register:hover { background: rgba(255,255,255,0.1); }
+    .container { max-width: 1200px; margin: 32px auto; padding: 0 16px; }
+    .hero { text-align: center; margin-bottom: 32px; }
+    .hero h1 { font-size: 32px; color: #0b3d6b; }
+    .hero p { color: #666; font-size: 16px; margin-top: 8px; }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .product-card img { width: 100%; height: 200px; object-fit: cover; background: #f7f9fc; }
+    .product-card .info { padding: 16px; }
+    .product-card .info h3 { font-size: 16px; color: #333; margin-bottom: 4px; }
+    .product-card .info .laboratorio { font-size: 12px; color: #888; }
+    .product-card .info .descripcion { font-size: 13px; color: #555; margin: 8px 0; line-height: 1.4; }
+    .product-card .info .precio { font-size: 22px; color: #0b3d6b; font-weight: 700; }
+    .product-card .info .stock { font-size: 12px; margin-top: 4px; }
+    .stock-ok { color: #2e7d32; }
+    .stock-low { color: #e65100; }
+    .stock-out { color: #c62828; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .modal h2 { color: #0b3d6b; margin-bottom: 20px; text-align: center; }
+    .modal .close { float: right; cursor: pointer; font-size: 24px; color: #888; }
+    .modal .close:hover { color: #333; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; font-weight: 500; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .form-group input:focus, .form-group textarea:focus { border-color: #1a6fb5; outline: none; }
+    .btn-primary { width: 100%; padding: 12px; background: #0b3d6b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; }
+    .btn-primary:hover { background: #1a6fb5; }
+    .btn-primary:disabled { background: #999; cursor: not-allowed; }
+    .error { color: #e74c3c; font-size: 13px; margin-top: 6px; display: none; }
+    .success { color: #27ae60; font-size: 13px; margin-top: 6px; display: none; text-align: center; }
     .loader { text-align: center; margin: 12px 0; display: none; }
     .loader::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #0b3d6b; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none; }
+    .step-info { text-align: center; color: #888; font-size: 13px; margin-bottom: 16px; }
+    .step-info.active { color: #1a6fb5; font-weight: 600; }
+    .toggle-link { text-align: center; margin-top: 14px; font-size: 13px; }
+    .toggle-link a { color: #1a6fb5; cursor: pointer; text-decoration: none; }
+    .toggle-link a:hover { text-decoration: underline; }
+    .filter-bar { margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .filter-bar input { flex: 1; min-width: 200px; padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .filter-bar select { padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
   </style>
 </head>
 <body>
+  <nav>
+    <h2>FarmCruzAzul</h2>
+    <div class="nav-links">
+      <button class="btn-login" onclick="openModal('login')">Iniciar Sesión</button>
+      <button class="btn-register" onclick="openModal('register')">Registrarse</button>
+    </div>
+  </nav>
+
   <div class="container">
-    <div class="logo">
-      <h1>FarmCruzAzul</h1>
-      <p>Portal de Autenticación</p>
+    <div class="hero">
+      <h1>Nuestros Medicamentos</h1>
+      <p>Compra online con receta médica. Todos nuestros productos son 100% originales.</p>
     </div>
 
-    <div class="step-info" id="stepDisplay">Paso 1: Ingrese sus credenciales</div>
-
-    <!-- Paso 1: Login -->
-    <div id="step1">
-      <div class="form-group">
-        <label>Usuario</label>
-        <input type="text" id="username" placeholder="Ingrese su usuario" autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="password" placeholder="Ingrese su contraseña" autocomplete="current-password">
-      </div>
-      <button class="btn" id="loginBtn" onclick="step1Login()">Iniciar Sesión</button>
-      <div class="error" id="loginError"></div>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Buscar medicamento..." oninput="filterProducts()">
+      <select id="labFilter" onchange="filterProducts()">
+        <option value="">Todos los laboratorios</option>
+      </select>
     </div>
 
-    <!-- Paso 2: MFA -->
-    <div id="step2" class="hidden">
-      <div class="form-group">
-        <label>Código MFA</label>
-        <input type="text" id="mfaCode" placeholder="Ingrese código de 6 dígitos" maxlength="6">
-      </div>
-      <button class="btn" id="mfaBtn" onclick="step2Mfa()">Verificar Código</button>
-      <div class="error" id="mfaError"></div>
-    </div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
 
-    <!-- Paso 3: Admin (solo 3er factor) -->
-    <div id="step3" class="hidden">
-      <div class="form-group">
-        <label>Código de Administración (3er Factor)</label>
-        <input type="password" id="adminCode" placeholder="Ingrese código de administración">
-      </div>
-      <button class="btn" id="adminBtn" onclick="step3Admin()">Verificar Admin</button>
-      <div class="error" id="adminError"></div>
-    </div>
+  <!-- Modal Login / MFA -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <span class="close" onclick="closeModal('login')">&times;</span>
+      <h2 id="loginModalTitle">Iniciar Sesión</h2>
+      <div class="step-info" id="loginStepDisplay">Paso 1: Ingrese sus credenciales</div>
 
-    <div class="loader" id="loader"></div>
-    <div class="success" id="successMsg"></div>
+      <div id="loginStep1">
+        <div class="form-group">
+          <label>Usuario</label>
+          <input type="text" id="loginUsername" placeholder="Ingrese su usuario">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="Ingrese su contraseña">
+        </div>
+        <button class="btn-primary" id="loginBtn" onclick="step1Login()">Iniciar Sesión</button>
+        <div class="error" id="loginError"></div>
+      </div>
+
+      <div id="loginStep2" class="hidden">
+        <div class="form-group">
+          <label>Código MFA (Google Authenticator)</label>
+          <input type="text" id="mfaCode" placeholder="Ingrese código de 6 dígitos" maxlength="6">
+        </div>
+        <button class="btn-primary" id="mfaBtn" onclick="step2Mfa()">Verificar Código</button>
+        <div class="error" id="mfaError"></div>
+      </div>
+
+      <div id="loginStep3" class="hidden">
+        <div class="form-group">
+          <label>Código de Administración (3er Factor)</label>
+          <input type="password" id="adminCode" placeholder="Ingrese código de administración">
+        </div>
+        <button class="btn-primary" id="adminBtn" onclick="step3Admin()">Verificar Admin</button>
+        <div class="error" id="adminError"></div>
+      </div>
+
+      <div class="loader" id="loginLoader"></div>
+      <div class="success" id="loginSuccess"></div>
+
+      <div class="toggle-link">
+        ¿No tienes cuenta? <a onclick="closeModal('login'); openModal('register')">Regístrate aquí</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Registro -->
+  <div class="modal-overlay" id="registerModal">
+    <div class="modal">
+      <span class="close" onclick="closeModal('register')">&times;</span>
+      <h2>Crear Cuenta</h2>
+      <div class="form-group">
+        <label>Usuario *</label>
+        <input type="text" id="regUsername" placeholder="Nombre de usuario">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="correo@ejemplo.cl">
+      </div>
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Dirección</label>
+        <input type="text" id="regDireccion" placeholder="Calle, número, comuna">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="regTelefono" placeholder="+56 9 XXXX XXXX">
+      </div>
+      <button class="btn-primary" onclick="register()">Crear Cuenta</button>
+      <div class="error" id="regError"></div>
+      <div class="success" id="regSuccess"></div>
+      <div class="toggle-link">
+        ¿Ya tienes cuenta? <a onclick="closeModal('register'); openModal('login')">Inicia sesión</a>
+      </div>
+    </div>
   </div>
 
   <script>
     let partialToken = '';
     let mfaToken = '';
 
-    function showError(id, msg) {
-      document.getElementById(id).textContent = msg;
-      document.getElementById(id).style.display = 'block';
+    function formatPrecio(n) { return '$' + Number(n).toLocaleString('es-CL'); }
+
+    function openModal(type) {
+      if (type === 'login') {
+        document.getElementById('loginModal').classList.add('active');
+        resetLoginModal();
+      } else {
+        document.getElementById('registerModal').classList.add('active');
+      }
     }
 
-    function hideErrors() {
-      document.querySelectorAll('.error').forEach(e => e.style.display = 'none');
+    function closeModal(type) {
+      document.getElementById(type + 'Modal').classList.remove('active');
+    }
+
+    function resetLoginModal() {
+      document.getElementById('loginStep1').classList.remove('hidden');
+      document.getElementById('loginStep2').classList.add('hidden');
+      document.getElementById('loginStep3').classList.add('hidden');
+      document.getElementById('loginStepDisplay').textContent = 'Paso 1: Ingrese sus credenciales';
+      document.getElementById('loginStepDisplay').className = 'step-info';
+      document.getElementById('loginError').style.display = 'none';
+      document.getElementById('mfaError').style.display = 'none';
+      document.getElementById('adminError').style.display = 'none';
+      document.getElementById('loginSuccess').style.display = 'none';
+      document.getElementById('loginLoader').style.display = 'none';
+      document.getElementById('loginBtn').disabled = false;
+      document.getElementById('loginModalTitle').textContent = 'Iniciar Sesión';
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/productos');
+        const productos = await res.json();
+        const grid = document.getElementById('productGrid');
+        const labFilter = document.getElementById('labFilter');
+        const labs = [...new Set(productos.map(p => p.laboratorio).filter(Boolean))];
+        labs.forEach(l => {
+          const opt = document.createElement('option');
+          opt.value = l; opt.textContent = l;
+          labFilter.appendChild(opt);
+        });
+        window.allProducts = productos;
+        renderProducts(productos);
+      } catch (err) { console.error(err); }
+    }
+
+    function renderProducts(productos) {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      if (productos.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px;">No se encontraron productos</p>';
+        return;
+      }
+      productos.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const stockClass = p.stock > 10 ? 'stock-ok' : p.stock > 0 ? 'stock-low' : 'stock-out';
+        const stockText = p.stock > 0 ? `${p.stock} en stock` : 'Agotado';
+        card.innerHTML = `
+          <img src="${p.imagen_url || 'https://placehold.co/200x200?text=Medicamento'}" alt="${p.nombre}" onerror="this.src='https://placehold.co/200x200?text=Sin+Imagen'">
+          <div class="info">
+            <h3>${p.nombre}</h3>
+            <div class="laboratorio">${p.laboratorio || ''}</div>
+            <div class="descripcion">${p.descripcion || ''}</div>
+            <div class="precio">${formatPrecio(p.precio)}</div>
+            <div class="stock ${stockClass}">${stockText}</div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterProducts() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const lab = document.getElementById('labFilter').value;
+      const filtered = window.allProducts.filter(p => {
+        const matchName = p.nombre.toLowerCase().includes(q);
+        const matchDesc = (p.descripcion || '').toLowerCase().includes(q);
+        const matchLab = !lab || p.laboratorio === lab;
+        return (matchName || matchDesc) && matchLab;
+      });
+      renderProducts(filtered);
+    }
+
+    // --- Auth ---
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg; el.style.display = 'block';
     }
 
     function showLoader(show) {
-      document.getElementById('loader').style.display = show ? 'block' : 'none';
+      document.getElementById('loginLoader').style.display = show ? 'block' : 'none';
     }
 
     async function step1Login() {
-      hideErrors();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
       if (!username || !password) { showError('loginError', 'Complete todos los campos'); return; }
-
       showLoader(true);
       document.getElementById('loginBtn').disabled = true;
-
       try {
         const res = await fetch('/auth/login', {
           method: 'POST',
@@ -108,18 +280,16 @@
           body: JSON.stringify({ username, password }),
         });
         const data = await res.json();
-
         if (!res.ok) {
           showError('loginError', data.error);
           document.getElementById('loginBtn').disabled = false;
-          showLoader(false);
-          return;
+          showLoader(false); return;
         }
-
         partialToken = data.partialToken;
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('stepDisplay').textContent = 'Paso 2: Verifique su código MFA';
+        document.getElementById('loginStep1').classList.add('hidden');
+        document.getElementById('loginStep2').classList.remove('hidden');
+        document.getElementById('loginStepDisplay').textContent = 'Paso 2: Verifique su código MFA';
+        document.getElementById('loginStepDisplay').className = 'step-info active';
         document.getElementById('loginBtn').disabled = false;
         showLoader(false);
       } catch (err) {
@@ -130,13 +300,10 @@
     }
 
     async function step2Mfa() {
-      hideErrors();
       const mfaCode = document.getElementById('mfaCode').value;
       if (!mfaCode) { showError('mfaError', 'Ingrese el código MFA'); return; }
-
       showLoader(true);
       document.getElementById('mfaBtn').disabled = true;
-
       try {
         const res = await fetch('/auth/verify-mfa', {
           method: 'POST',
@@ -144,19 +311,16 @@
           body: JSON.stringify({ mfaCode }),
         });
         const data = await res.json();
-
         if (!res.ok) {
           showError('mfaError', data.error);
           document.getElementById('mfaBtn').disabled = false;
-          showLoader(false);
-          return;
+          showLoader(false); return;
         }
-
         if (data.requiresThirdFactor) {
           mfaToken = data.mfaToken;
-          document.getElementById('step2').classList.add('hidden');
-          document.getElementById('step3').classList.remove('hidden');
-          document.getElementById('stepDisplay').textContent = 'Paso 3: Código de Administración (3er Factor)';
+          document.getElementById('loginStep2').classList.add('hidden');
+          document.getElementById('loginStep3').classList.remove('hidden');
+          document.getElementById('loginStepDisplay').textContent = 'Paso 3: Código de Administración';
         } else {
           localStorage.setItem('token', data.token);
           window.location.href = data.redirectTo;
@@ -171,13 +335,10 @@
     }
 
     async function step3Admin() {
-      hideErrors();
       const adminCode = document.getElementById('adminCode').value;
       if (!adminCode) { showError('adminError', 'Ingrese el código de administración'); return; }
-
       showLoader(true);
       document.getElementById('adminBtn').disabled = true;
-
       try {
         const res = await fetch('/auth/verify-admin', {
           method: 'POST',
@@ -185,14 +346,11 @@
           body: JSON.stringify({ adminCode }),
         });
         const data = await res.json();
-
         if (!res.ok) {
           showError('adminError', data.error);
           document.getElementById('adminBtn').disabled = false;
-          showLoader(false);
-          return;
+          showLoader(false); return;
         }
-
         localStorage.setItem('token', data.token);
         window.location.href = data.redirectTo;
         document.getElementById('adminBtn').disabled = false;
@@ -203,6 +361,43 @@
         showLoader(false);
       }
     }
+
+    async function register() {
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const email = document.getElementById('regEmail').value;
+      const direccion = document.getElementById('regDireccion').value;
+      const telefono = document.getElementById('regTelefono').value;
+      if (!username || !password) {
+        document.getElementById('regError').textContent = 'Usuario y contraseña son requeridos';
+        document.getElementById('regError').style.display = 'block'; return;
+      }
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, email, direccion, telefono }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          document.getElementById('regError').textContent = data.error;
+          document.getElementById('regError').style.display = 'block'; return;
+        }
+        document.getElementById('regError').style.display = 'none';
+        document.getElementById('regSuccess').textContent = 'Cuenta creada exitosamente. Inicia sesión.';
+        document.getElementById('regSuccess').style.display = 'block';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regDireccion').value = '';
+        document.getElementById('regTelefono').value = '';
+      } catch (err) {
+        document.getElementById('regError').textContent = 'Error de conexión';
+        document.getElementById('regError').style.display = 'block';
+      }
+    }
+
+    loadProducts();
   </script>
 </body>
 </html>

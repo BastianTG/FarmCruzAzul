@@ -3,66 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cruz Azul ERP - Admin</title>
+  <title>FarmCruzAzul - Admin</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #f0f2f5; min-height: 100vh; }
-    nav { background: #0b3d6b; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    body { background: #f0f2f5; }
+    nav { background: #1a1a2e; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
     nav h2 { font-size: 18px; }
-    .user-info { display: flex; align-items: center; gap: 16px; }
+    nav .nav-right { display: flex; align-items: center; gap: 16px; }
+    nav .nav-right span { font-size: 14px; }
     .btn-logout { padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
-    .btn-logout:hover { background: #c0392b; }
-    .container { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
-    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .card h2 { color: #0b3d6b; font-size: 20px; margin-bottom: 8px; }
-    .card p { color: #666; font-size: 14px; }
-    .card .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-    .card .info-item { padding: 12px; background: #f7f9fc; border-radius: 8px; }
-    .card .info-item label { font-size: 12px; color: #888; display: block; }
-    .card .info-item span { font-size: 14px; color: #333; font-weight: 500; }
-    table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
-    th, td { padding: 12px 20px; text-align: left; font-size: 14px; }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tabs button { padding: 10px 24px; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 500; background: #ddd; color: #666; }
+    .tabs button.active { background: white; color: #1a1a2e; font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 10px 16px; text-align: left; font-size: 13px; }
     th { background: #f7f9fc; color: #555; font-weight: 600; }
     td { border-top: 1px solid #eee; }
     tr:hover td { background: #f8faff; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-    .badge-success { background: #e8f5e9; color: #2e7d32; }
-    .badge-warning { background: #fff3e0; color: #e65100; }
-    .btn-primary { padding: 10px 20px; background: #0b3d6b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+
+    .btn-sm { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+    .btn-edit { background: #e3f2fd; color: #1565c0; }
+    .btn-delete { background: #fbe9e7; color: #c62828; }
+    .btn-add { background: #0b3d6b; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+    .btn-add:hover { background: #1a6fb5; }
+    .btn-primary { background: #0b3d6b; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
     .btn-primary:hover { background: #1a6fb5; }
+    .btn-secondary { background: #666; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-secondary:hover { background: #555; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .modal h3 { color: #1a1a2e; margin-bottom: 16px; }
+    .modal .close { float: right; cursor: pointer; font-size: 24px; color: #888; }
+    .modal .close:hover { color: #333; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .form-group input:focus, .form-group textarea:focus { border-color: #1a6fb5; outline: none; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .modal-actions button { flex: 1; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-pendiente { background: #fff3e0; color: #e65100; }
+    .badge-completada { background: #e8f5e9; color: #2e7d32; }
+    .badge-admin { background: #fff3e0; color: #e65100; }
+    .badge-user { background: #e8f5e9; color: #2e7d32; }
+
+    .orden { border: 1px solid #eee; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .orden .header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .orden .items { font-size: 12px; color: #555; }
+    .orden .total { text-align: right; font-size: 15px; font-weight: 700; color: #1a1a2e; margin-top: 6px; }
   </style>
 </head>
 <body>
   <nav>
-    <h2>FarmCruzAzul ERP — Admin</h2>
-    <div class="user-info">
+    <h2>FarmCruzAzul — Panel Admin</h2>
+    <div class="nav-right">
       <span id="userDisplay">Admin</span>
       <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
     </div>
   </nav>
 
   <div class="container">
-    <div class="card">
-      <h2>Panel de Administración (3 Factores)</h2>
-      <p>Has accedido con autenticación de 3 factores. Aquí puedes gestionar la infraestructura.</p>
-      <div class="info-grid">
-        <div class="info-item"><label>Estado Conexión RDS</label><span id="rdsStatus">Verificando...</span></div>
-        <div class="info-item"><label>Último Backup S3</label><span id="backupStatus">Consultando...</span></div>
-        <div class="info-item"><label>Instancia EC2</label><span>Activa</span></div>
-        <div class="info-item"><label>Security Group</label><span>Restringido</span></div>
-      </div>
+    <div class="tabs">
+      <button class="active" onclick="switchTab('productos', this)">Productos</button>
+      <button onclick="switchTab('ordenes', this)">Órdenes</button>
+      <button onclick="switchTab('usuarios', this)">Usuarios</button>
     </div>
 
-    <h3 style="margin-bottom:12px;color:#333;">Backups RDS → S3</h3>
-    <table>
-      <thead>
-        <tr><th>Fecha</th><th>Archivo</th><th>Tamaño</th><th>Estado</th></tr>
-      </thead>
-      <tbody id="backupsBody"></tbody>
-    </table>
+    <div id="tabProductos" class="tab-content active">
+      <button class="btn-add" onclick="openProductModal()">+ Nuevo Producto</button>
+      <table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Laboratorio</th><th>Acciones</th></tr></thead>
+        <tbody id="productosBody"></tbody>
+      </table>
+    </div>
 
-    <div style="text-align:right;">
-      <button class="btn-primary" onclick="window.location.href='/dashboard.html'">Ir al Dashboard</button>
+    <div id="tabOrdenes" class="tab-content">
+      <div id="ordenesList"></div>
+    </div>
+
+    <div id="tabUsuarios" class="tab-content">
+      <table>
+        <thead><tr><th>ID</th><th>Usuario</th><th>Email</th><th>Rol</th><th>Registro</th></tr></thead>
+        <tbody id="usuariosBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Producto -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <span class="close" onclick="closeProductModal()">&times;</span>
+      <h3 id="productModalTitle">Nuevo Producto</h3>
+      <input type="hidden" id="prodId">
+      <div class="form-group">
+        <label>Nombre *</label>
+        <input type="text" id="prodNombre">
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea id="prodDescripcion" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Precio *</label>
+        <input type="number" id="prodPrecio" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Stock</label>
+        <input type="number" id="prodStock">
+      </div>
+      <div class="form-group">
+        <label>Laboratorio</label>
+        <input type="text" id="prodLaboratorio">
+      </div>
+      <div class="form-group">
+        <label>URL Imagen</label>
+        <input type="text" id="prodImagen">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="saveProduct()">Guardar</button>
+        <button class="btn-secondary" onclick="closeProductModal()">Cancelar</button>
+      </div>
     </div>
   </div>
 
@@ -70,36 +139,173 @@
     const token = localStorage.getItem('token');
     if (!token) { window.location.href = '/'; }
 
-    async function loadAdmin() {
-      try {
-        const me = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (!me.ok) { logout(); return; }
-        const userData = await me.json();
-        if (userData.user.rol !== 'admin') { window.location.href = '/dashboard.html'; return; }
-        document.getElementById('userDisplay').textContent = `Admin: ${userData.user.username}`;
+    function formatPrecio(n) { return '$' + Number(n).toLocaleString('es-CL'); }
 
-        const backupsRes = await fetch('/api/backups', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (backupsRes.ok) {
-          const data = await backupsRes.json();
-          const tbody = document.getElementById('backupsBody');
-          tbody.innerHTML = '';
-          data.backups.forEach(b => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${b.fecha}</td><td>${b.archivo}</td><td>${b.tamano}</td><td><span class="badge badge-success">Completado</span></td>`;
-            tbody.appendChild(tr);
-          });
-          document.getElementById('rdsStatus').textContent = 'Conectado';
-          document.getElementById('backupStatus').textContent = data.backups[0].fecha;
-        }
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+    }
+
+    // --- Productos ---
+    async function loadProductos() {
+      try {
+        const res = await fetch('/api/productos');
+        const prods = await res.json();
+        const tbody = document.getElementById('productosBody');
+        tbody.innerHTML = '';
+        prods.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${formatPrecio(p.precio)}</td>
+            <td>${p.stock}</td>
+            <td>${p.laboratorio || '-'}</td>
+            <td>
+              <button class="btn-sm btn-edit" onclick="editProduct(${p.id})">Editar</button>
+              <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})">Eliminar</button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
       } catch (err) { console.error(err); }
     }
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = '/';
+    function openProductModal(prod) {
+      document.getElementById('productModal').classList.add('active');
+      if (prod) {
+        document.getElementById('productModalTitle').textContent = 'Editar Producto';
+        document.getElementById('prodId').value = prod.id;
+        document.getElementById('prodNombre').value = prod.nombre;
+        document.getElementById('prodDescripcion').value = prod.descripcion || '';
+        document.getElementById('prodPrecio').value = prod.precio;
+        document.getElementById('prodStock').value = prod.stock;
+        document.getElementById('prodLaboratorio').value = prod.laboratorio || '';
+        document.getElementById('prodImagen').value = prod.imagen_url || '';
+      } else {
+        document.getElementById('productModalTitle').textContent = 'Nuevo Producto';
+        document.getElementById('prodId').value = '';
+        document.getElementById('prodNombre').value = '';
+        document.getElementById('prodDescripcion').value = '';
+        document.getElementById('prodPrecio').value = '';
+        document.getElementById('prodStock').value = '0';
+        document.getElementById('prodLaboratorio').value = '';
+        document.getElementById('prodImagen').value = '';
+      }
     }
 
-    loadAdmin();
+    function closeProductModal() {
+      document.getElementById('productModal').classList.remove('active');
+    }
+
+    async function saveProduct() {
+      const id = document.getElementById('prodId').value;
+      const data = {
+        nombre: document.getElementById('prodNombre').value,
+        descripcion: document.getElementById('prodDescripcion').value,
+        precio: parseFloat(document.getElementById('prodPrecio').value),
+        stock: parseInt(document.getElementById('prodStock').value) || 0,
+        laboratorio: document.getElementById('prodLaboratorio').value,
+        imagen_url: document.getElementById('prodImagen').value,
+      };
+      if (!data.nombre || !data.precio) { alert('Nombre y precio son requeridos'); return; }
+
+      try {
+        const url = id ? `/api/productos/${id}` : '/api/productos';
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) { const e = await res.json(); alert('Error: ' + e.error); return; }
+        closeProductModal();
+        loadProductos();
+      } catch (err) { alert('Error de conexión'); }
+    }
+
+    async function editProduct(id) {
+      const res = await fetch('/api/productos');
+      const prods = await res.json();
+      const prod = prods.find(p => p.id === id);
+      if (prod) openProductModal(prod);
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('¿Eliminar este producto?')) return;
+      try {
+        const res = await fetch(`/api/productos/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) { const e = await res.json(); alert('Error: ' + e.error); return; }
+        loadProductos();
+      } catch (err) { alert('Error de conexión'); }
+    }
+
+    // --- Órdenes ---
+    async function loadOrdenes() {
+      try {
+        const res = await fetch('/api/ordenes/todas', { headers: { 'Authorization': `Bearer ${token}` } });
+        const ordenes = await res.json();
+        const list = document.getElementById('ordenesList');
+        list.innerHTML = '';
+        if (ordenes.length === 0) {
+          list.innerHTML = '<p style="color:#888;text-align:center;padding:40px;">No hay órdenes registradas.</p>';
+          return;
+        }
+        ordenes.forEach(o => {
+          const div = document.createElement('div');
+          div.className = 'orden';
+          div.innerHTML = `
+            <div class="header">
+              <span><strong>#${o.id}</strong> — ${o.username} — ${new Date(o.created_at).toLocaleDateString()}</span>
+              <span class="badge badge-${o.estado}">${o.estado}</span>
+            </div>
+            <div class="items">${o.items.map(i => `${i.nombre} x${i.cantidad} — ${formatPrecio(i.precio_unitario * i.cantidad)}`).join('<br>')}</div>
+            <div class="total">Total: ${formatPrecio(o.total)}</div>`;
+          list.appendChild(div);
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    // --- Usuarios ---
+    async function loadUsuarios() {
+      try {
+        const res = await fetch('/api/usuarios', { headers: { 'Authorization': `Bearer ${token}` } });
+        const usuarios = await res.json();
+        const tbody = document.getElementById('usuariosBody');
+        tbody.innerHTML = '';
+        usuarios.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${u.id}</td>
+            <td>${u.username}</td>
+            <td>${u.email || '-'}</td>
+            <td><span class="badge ${u.rol === 'admin' ? 'badge-admin' : 'badge-user'}">${u.rol}</span></td>
+            <td>${new Date(u.created_at).toLocaleDateString()}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) { logout(); return; }
+        const data = await res.json();
+        if (data.user.rol !== 'admin') { window.location.href = '/dashboard.html'; return; }
+        document.getElementById('userDisplay').textContent = 'Admin: ' + data.user.username;
+      } catch (err) { logout(); }
+    }
+
+    loadProfile();
+    loadProductos();
+    loadOrdenes();
+    loadUsuarios();
   </script>
 </body>
 </html>

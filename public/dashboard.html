@@ -3,142 +3,278 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cruz Azul ERP - Dashboard</title>
+  <title>FarmCruzAzul - Mi Cuenta</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #f0f2f5; min-height: 100vh; }
+    body { background: #f0f2f5; }
     nav { background: #0b3d6b; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
     nav h2 { font-size: 18px; }
-    nav .user-info { display: flex; align-items: center; gap: 16px; }
-    nav .user-info span { font-size: 14px; }
+    nav .nav-right { display: flex; align-items: center; gap: 16px; }
+    nav .nav-right span { font-size: 14px; }
     .btn-logout { padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
     .btn-logout:hover { background: #c0392b; }
-    .container { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
-    .welcome-card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .welcome-card h1 { font-size: 22px; color: #0b3d6b; margin-bottom: 8px; }
-    .welcome-card p { color: #666; font-size: 14px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
-    .stat-card h3 { font-size: 28px; color: #0b3d6b; }
-    .stat-card p { font-size: 13px; color: #888; margin-top: 4px; }
-    .section-title { font-size: 18px; color: #333; margin-bottom: 16px; }
-    .recursos-table { width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .recursos-table th, .recursos-table td { padding: 12px 20px; text-align: left; font-size: 14px; }
-    .recursos-table th { background: #f7f9fc; color: #555; font-weight: 600; }
-    .recursos-table td { border-top: 1px solid #eee; }
-    .recursos-table tr:hover td { background: #f8faff; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-    .badge-user { background: #e8f5e9; color: #2e7d32; }
-    .badge-admin { background: #fff3e0; color: #e65100; }
-    .badge-report { background: #e3f2fd; color: #1565c0; }
-    .hidden { display: none; }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tabs button { padding: 10px 24px; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 500; background: #ddd; color: #666; }
+    .tabs button.active { background: white; color: #0b3d6b; font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .product-card img { width: 100%; height: 160px; object-fit: cover; background: #f7f9fc; }
+    .product-card .info { padding: 12px; }
+    .product-card .info h3 { font-size: 15px; color: #333; }
+    .product-card .info .laboratorio { font-size: 12px; color: #888; }
+    .product-card .info .precio { font-size: 20px; color: #0b3d6b; font-weight: 700; margin: 6px 0; }
+    .product-card .info .stock { font-size: 12px; }
+    .stock-ok { color: #2e7d32; }
+    .stock-low { color: #e65100; }
+    .stock-out { color: #c62828; }
+    .product-card .info .btn-add { width: 100%; padding: 8px; background: #0b3d6b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 8px; }
+    .product-card .info .btn-add:hover { background: #1a6fb5; }
+    .product-card .info .btn-add:disabled { background: #999; cursor: not-allowed; }
+
+    .cart-sidebar { position: fixed; top: 0; right: -380px; width: 360px; height: 100%; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.15); transition: right 0.3s; z-index: 999; padding: 20px; display: flex; flex-direction: column; }
+    .cart-sidebar.open { right: 0; }
+    .cart-sidebar h3 { color: #0b3d6b; margin-bottom: 16px; }
+    .cart-sidebar .close-cart { position: absolute; top: 16px; right: 16px; cursor: pointer; font-size: 24px; color: #888; }
+    .cart-items { flex: 1; overflow-y: auto; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+    .cart-item .qty-controls { display: flex; align-items: center; gap: 8px; }
+    .cart-item .qty-controls button { width: 28px; height: 28px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; }
+    .cart-item .remove { color: #e74c3c; cursor: pointer; font-size: 18px; }
+    .cart-total { padding-top: 16px; border-top: 2px solid #0b3d6b; font-size: 18px; font-weight: 700; color: #0b3d6b; display: flex; justify-content: space-between; }
+    .btn-checkout { width: 100%; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+    .btn-checkout:hover { background: #388e3c; }
+    .btn-checkout:disabled { background: #999; cursor: not-allowed; }
+    .cart-fab { position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; background: #0b3d6b; color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 998; }
+    .cart-fab:hover { background: #1a6fb5; }
+    .cart-fab .badge { position: absolute; top: -4px; right: -4px; background: #e74c3c; color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card h3 { color: #0b3d6b; margin-bottom: 8px; }
+    .orden { border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .orden .header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+    .orden .header .estado { font-weight: 600; }
+    .orden .items { font-size: 13px; color: #555; }
+    .orden .total { text-align: right; font-size: 16px; font-weight: 700; color: #0b3d6b; margin-top: 8px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    .badge-pendiente { background: #fff3e0; color: #e65100; }
+    .badge-completada { background: #e8f5e9; color: #2e7d32; }
   </style>
 </head>
 <body>
   <nav>
-    <h2>FarmCruzAzul ERP</h2>
-    <div class="user-info">
+    <h2>FarmCruzAzul</h2>
+    <div class="nav-right">
       <span id="userDisplay">Usuario</span>
-      <span class="badge" id="roleBadge">user</span>
       <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
     </div>
   </nav>
 
   <div class="container">
-    <div class="welcome-card">
-      <h1 id="welcomeMsg">Bienvenido</h1>
-      <p>Panel de control - Portal de Autenticación MFA</p>
+    <div class="tabs">
+      <button class="active" onclick="switchTab('productos', this)">Productos</button>
+      <button onclick="switchTab('ordenes', this)">Mis Órdenes</button>
     </div>
 
-    <div class="stats-grid" id="statsGrid"></div>
-
-    <h3 class="section-title">Recursos Disponibles</h3>
-    <table class="recursos-table">
-      <thead>
-        <tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Acción</th></tr>
-      </thead>
-      <tbody id="recursosBody"></tbody>
-    </table>
-
-    <div id="adminSection" class="hidden" style="margin-top: 24px;">
-      <h3 class="section-title">Administración</h3>
-      <table class="recursos-table">
-        <thead>
-          <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Rol</th><th>Creación</th></tr>
-        </thead>
-        <tbody id="usuariosBody"></tbody>
-      </table>
+    <div id="tabProductos" class="tab-content active">
+      <div class="product-grid" id="productGrid"></div>
     </div>
+
+    <div id="tabOrdenes" class="tab-content">
+      <div id="ordenesList"></div>
+    </div>
+  </div>
+
+  <button class="cart-fab" id="cartFab" onclick="toggleCart()">
+    🛒 <span class="badge" id="cartCount">0</span>
+  </button>
+
+  <div class="cart-sidebar" id="cartSidebar">
+    <span class="close-cart" onclick="toggleCart()">&times;</span>
+    <h3>Carrito de Compras</h3>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">$0</span>
+    </div>
+    <button class="btn-checkout" id="checkoutBtn" onclick="checkout()">Realizar Pedido</button>
   </div>
 
   <script>
     const token = localStorage.getItem('token');
     if (!token) { window.location.href = '/'; }
 
-    async function loadDashboard() {
-      try {
-        const res = await fetch('/api/dashboard', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!res.ok) { logout(); return; }
-        const data = await res.json();
+    let cart = [];
+    let allProducts = [];
 
-        document.getElementById('userDisplay').textContent = data.message;
-        document.getElementById('welcomeMsg').textContent = data.message;
+    function formatPrecio(n) { return '$' + Number(n).toLocaleString('es-CL'); }
 
-        const badge = document.getElementById('roleBadge');
-        badge.textContent = data.role;
-        badge.className = data.role === 'admin' ? 'badge badge-admin' : 'badge badge-user';
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
 
-        const statsGrid = document.getElementById('statsGrid');
-        statsGrid.innerHTML = '';
-        Object.entries(data.stats).forEach(([key, val]) => {
-          const card = document.createElement('div');
-          card.className = 'stat-card';
-          card.innerHTML = `<h3>${val}</h3><p>${key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</p>`;
-          statsGrid.appendChild(card);
-        });
-
-        const recursosBody = document.getElementById('recursosBody');
-        recursosBody.innerHTML = '';
-        data.recursos.forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${r.id}</td><td>${r.nombre}</td><td><span class="badge badge-report">${r.tipo}</span></td><td><a href="${r.url}" style="color:#1a6fb5;">Acceder</a></td>`;
-          recursosBody.appendChild(tr);
-        });
-
-        if (data.role === 'admin') {
-          document.getElementById('adminSection').classList.remove('hidden');
-          loadUsuarios();
-        }
-      } catch (err) {
-        console.error(err);
-      }
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
     }
 
-    async function loadUsuarios() {
+    async function loadProducts() {
       try {
-        const res = await fetch('/api/usuarios', {
-          headers: { 'Authorization': `Bearer ${token}` },
+        const res = await fetch('/api/productos');
+        const data = await res.json();
+        allProducts = data;
+        renderProducts(data);
+      } catch (err) { console.error(err); }
+    }
+
+    function renderProducts(productos) {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      productos.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const inCart = cart.find(c => c.id === p.id);
+        const stockClass = p.stock > 10 ? 'stock-ok' : p.stock > 0 ? 'stock-low' : 'stock-out';
+        const stockText = p.stock > 0 ? `${p.stock} en stock` : 'Agotado';
+        const qty = inCart ? inCart.qty : 0;
+        card.innerHTML = `
+          <img src="${p.imagen_url || 'https://placehold.co/200x200?text=Medicamento'}" alt="${p.nombre}" onerror="this.src='https://placehold.co/200x200?text=No+Image'">
+          <div class="info">
+            <h3>${p.nombre}</h3>
+            <div class="laboratorio">${p.laboratorio || ''}</div>
+            <div class="precio">${formatPrecio(p.precio)}</div>
+            <div class="stock ${stockClass}">${stockText}</div>
+            <button class="btn-add" ${p.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${p.id})">${qty > 0 ? `Agregado (${qty})` : 'Agregar al Carrito'}</button>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function addToCart(id) {
+      const p = allProducts.find(x => x.id === id);
+      if (!p || p.stock <= 0) return;
+      const existing = cart.find(c => c.id === id);
+      if (existing) {
+        if (existing.qty >= p.stock) return;
+        existing.qty++;
+      } else {
+        cart.push({ id: p.id, nombre: p.nombre, precio: p.precio, qty: 1, stock: p.stock });
+      }
+      updateCartUI();
+      renderProducts(allProducts);
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(c => c.id !== id);
+      updateCartUI();
+      renderProducts(allProducts);
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(c => c.id === id);
+      if (!item) return;
+      const p = allProducts.find(x => x.id === id);
+      item.qty += delta;
+      if (item.qty <= 0) { removeFromCart(id); return; }
+      if (item.qty > p.stock) { item.qty = p.stock; return; }
+      updateCartUI();
+      renderProducts(allProducts);
+    }
+
+    function updateCartUI() {
+      const count = cart.reduce((s, c) => s + c.qty, 0);
+      document.getElementById('cartCount').textContent = count;
+      const items = document.getElementById('cartItems');
+      items.innerHTML = '';
+      let total = 0;
+      cart.forEach(c => {
+        total += c.precio * c.qty;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:500">${c.nombre}</div>
+            <div style="font-size:12px;color:#888">${formatPrecio(c.precio)} c/u</div>
+          </div>
+          <div class="qty-controls">
+            <button onclick="changeQty(${c.id}, -1)">-</button>
+            <span>${c.qty}</span>
+            <button onclick="changeQty(${c.id}, 1)">+</button>
+            <span class="remove" onclick="removeFromCart(${c.id})">&times;</span>
+          </div>`;
+        items.appendChild(div);
+      });
+      document.getElementById('cartTotal').textContent = formatPrecio(total);
+      document.getElementById('checkoutBtn').disabled = cart.length === 0;
+    }
+
+    function toggleCart() {
+      document.getElementById('cartSidebar').classList.toggle('open');
+    }
+
+    async function checkout() {
+      if (cart.length === 0) return;
+      document.getElementById('checkoutBtn').disabled = true;
+      document.getElementById('checkoutBtn').textContent = 'Procesando...';
+      try {
+        const res = await fetch('/api/ordenes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ items: cart.map(c => ({ productoId: c.id, cantidad: c.qty })) }),
         });
-        if (!res.ok) return;
-        const usuarios = await res.json();
-        const tbody = document.getElementById('usuariosBody');
-        tbody.innerHTML = '';
-        usuarios.forEach(u => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.email}</td><td><span class="badge ${u.rol === 'admin' ? 'badge-admin' : 'badge-user'}">${u.rol}</span></td><td>${new Date(u.created_at).toLocaleDateString()}</td>`;
-          tbody.appendChild(tr);
+        const data = await res.json();
+        if (!res.ok) { alert('Error: ' + data.error); return; }
+        cart = [];
+        updateCartUI();
+        toggleCart();
+        loadProducts();
+        loadOrdenes();
+        alert('Pedido realizado exitosamente!');
+      } catch (err) { alert('Error de conexión'); }
+      document.getElementById('checkoutBtn').disabled = false;
+      document.getElementById('checkoutBtn').textContent = 'Realizar Pedido';
+    }
+
+    async function loadOrdenes() {
+      try {
+        const res = await fetch('/api/ordenes', { headers: { 'Authorization': `Bearer ${token}` } });
+        const ordenes = await res.json();
+        const list = document.getElementById('ordenesList');
+        list.innerHTML = '';
+        if (ordenes.length === 0) {
+          list.innerHTML = '<p style="color:#888;text-align:center;padding:40px;">No tienes órdenes aún. ¡Compra en la sección Productos!</p>';
+          return;
+        }
+        ordenes.forEach(o => {
+          const div = document.createElement('div');
+          div.className = 'orden';
+          div.innerHTML = `
+            <div class="header">
+              <span>Orden #${o.id} — ${new Date(o.created_at).toLocaleDateString()}</span>
+              <span class="estado badge badge-${o.estado}">${o.estado}</span>
+            </div>
+            <div class="items">${o.items.map(i => `${i.nombre} x${i.cantidad} — ${formatPrecio(i.precio_unitario * i.cantidad)}`).join('<br>')}</div>
+            <div class="total">Total: ${formatPrecio(o.total)}</div>`;
+          list.appendChild(div);
         });
       } catch (err) { console.error(err); }
     }
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = '/';
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) { logout(); return; }
+        const data = await res.json();
+        document.getElementById('userDisplay').textContent = data.user.username;
+      } catch (err) { logout(); }
     }
 
-    loadDashboard();
+    loadProfile();
+    loadProducts();
+    loadOrdenes();
   </script>
 </body>
 </html>

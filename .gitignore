@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Directorios del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de documentación local
+PASO_A_PASO.md
+EVA3_TI3053_S3_RDS_N5_C2-3.txt

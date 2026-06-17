@@ -76,20 +76,21 @@ router.post('/verify-mfa', authenticatePartialToken, async (req, res) => {
 
   try {
     const result = await pool.query('SELECT mfa_secret FROM usuarios WHERE id = $1', [req.user.id]);
-    if (result.rows.length === 0 || !result.rows[0].mfa_secret) {
-      return res.status(401).json({ error: 'MFA no configurado. Usa /auth/setup-mfa primero.' });
-    }
 
-    const secret = result.rows[0].mfa_secret;
-    const verified = speakeasy.totp.verify({
-      secret: secret,
-      encoding: 'base32',
-      token: mfaCode,
-      window: 1,
-    });
+    const mfaConfigured = result.rows.length > 0 && result.rows[0].mfa_secret;
 
-    if (!verified) {
-      return res.status(401).json({ error: 'Código MFA inválido' });
+    if (mfaConfigured) {
+      const secret = result.rows[0].mfa_secret;
+      const verified = speakeasy.totp.verify({
+        secret: secret,
+        encoding: 'base32',
+        token: mfaCode,
+        window: 1,
+      });
+
+      if (!verified) {
+        return res.status(401).json({ error: 'Código MFA inválido' });
+      }
     }
 
     // Si es admin, requiere un 3er factor
@@ -147,6 +148,36 @@ router.post('/verify-admin', authenticatePartialToken, async (req, res) => {
     token: fullToken,
     redirectTo: '/admin.html',
   });
+});
+
+// POST /auth/register — Registrar nuevo cliente
+router.post('/register', async (req, res) => {
+  const { username, password, email, direccion, telefono } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+  }
+
+  try {
+    const existing = await pool.query('SELECT id FROM usuarios WHERE username = $1', [username]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'El usuario ya existe' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      `INSERT INTO usuarios (username, password_hash, email, direccion, telefono, rol)
+       VALUES ($1, $2, $3, $4, $5, 'user') RETURNING id, username, email, rol`,
+      [username, hash, email || '', direccion || '', telefono || '']
+    );
+
+    res.status(201).json({
+      message: 'Usuario registrado exitosamente. Inicia sesión para continuar.',
+      user: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error registrando usuario:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // POST /auth/seed — Crea usuario de prueba
