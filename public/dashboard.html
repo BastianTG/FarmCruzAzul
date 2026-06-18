@@ -188,7 +188,7 @@
 
     function formatPrecio(n) { return '$' + Number(n).toLocaleString('es-CL'); }
 
-    function     function showToast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast toast-' + type; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 4000); }
+    function showToast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast toast-' + type; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 4000); }
 
     function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
 
