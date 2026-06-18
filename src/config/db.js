@@ -79,7 +79,27 @@ async function initDB() {
           ('Salbutamol 100mcg', 'Broncodilatador inhalador para asma y EPOC', 8900, 30, 'GlaxoSmithKline', 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Ventol%C3%ADn_%28Salbutamol%29.jpg'),
           ('Metformina 850mg', 'Hipoglucemiante oral para diabetes tipo 2', 3600, 90, 'Sanofi', 'https://upload.wikimedia.org/wikipedia/commons/d/db/Metformin_500mg_Tablets.jpg'),
           ('Atorvastatina 20mg', 'Hipolipemiante para reducir colesterol LDL', 5500, 45, 'Pfizer', 'https://upload.wikimedia.org/wikipedia/commons/d/da/Atorvastatin40mg.jpg'),
-          ('Vitamina C 1000mg', 'Suplemento vitamínico antioxidante', 1800, 200, 'Natural Life', 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Celaskon_500mg_tablets.jpg');
+          ('Vitamina C 1000mg', 'Suplemento vitamínico antioxidante', 1800, 200, 'Natural Life', 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Celaskon_500mg_tablets.jpg'),
+          ('Diclofenaco 75mg', 'Antiinflamatorio y analgésico para dolores musculares y articulares', 2900, 75, 'Saval', 'https://placehold.co/200x200/3b82f6/ffffff?text=Diclofenaco'),
+          ('Naproxeno 500mg', 'Antiinflamatorio no esteroidal para dolor crónico y artritis', 3400, 60, 'Lab Chile', 'https://placehold.co/200x200/8b5cf6/ffffff?text=Naproxeno'),
+          ('Azitromicina 500mg', 'Antibiótico macrólido para infecciones respiratorias y urinarias', 7200, 40, 'Andrómaco', 'https://placehold.co/200x200/ef4444/ffffff?text=Azitromicina'),
+          ('Cloranfenicol 250mg', 'Antibiótico de amplio espectro para infecciones bacterianas', 4100, 35, 'Pharma Investi', 'https://placehold.co/200x200/ec4899/ffffff?text=Cloranfenicol'),
+          ('Dexametasona 4mg', 'Corticosteroide para procesos inflamatorios y alérgicos severos', 2800, 55, 'Rider', 'https://placehold.co/200x200/14b8a6/ffffff?text=Dexametasona'),
+          ('Furosemida 40mg', 'Diurético para hipertensión y edemas', 1900, 90, 'Sanofi', 'https://placehold.co/200x200/f97316/ffffff?text=Furosemida'),
+          ('Hidroclorotiazida 25mg', 'Diurético tiazídico para control de hipertensión', 1600, 85, 'Bagó', 'https://placehold.co/200x200/84cc16/ffffff?text=HCTZ'),
+          ('Captopril 25mg', 'Inhibidor ECA para hipertensión arterial e insuficiencia cardíaca', 2300, 65, 'Rider', 'https://placehold.co/200x200/06b6d4/ffffff?text=Captopril'),
+          ('Enalapril 10mg', 'Inhibidor ECA para hipertensión y protección renal en diabetes', 2700, 70, 'Lab Chile', 'https://placehold.co/200x200/6366f1/ffffff?text=Enalapril'),
+          ('Simvastatina 20mg', 'Hipolipemiante para reducir colesterol y triglicéridos', 4900, 50, 'Pharma Investi', 'https://placehold.co/200x200/a855f7/ffffff?text=Simvastatina'),
+          ('Ranitidina 150mg', 'Antagonista H2 para úlceras gástricas y reflujo', 2200, 100, 'Saval', 'https://placehold.co/200x200/f43f5e/ffffff?text=Ranitidina'),
+          ('Dipirona 500mg', 'Analgésico y antitérmico para dolor intenso y fiebre alta', 2100, 110, 'Andrómaco', 'https://placehold.co/200x200/eab308/ffffff?text=Dipirona'),
+          ('Ciprofloxacino 500mg', 'Antibiótico fluoroquinolona para infecciones urinarias e intestinales', 5800, 45, 'Sanofi', 'https://placehold.co/200x200/22c55e/ffffff?text=Ciprofloxacino'),
+          ('Clindamicina 300mg', 'Antibiótico lincosamida para infecciones óseas y dentales', 6500, 30, 'GlaxoSmithKline', 'https://placehold.co/200x200/3b82f6/ffffff?text=Clindamicina'),
+          ('Fluconazol 150mg', 'Antifúngico para candidiasis e infecciones por hongos', 8900, 25, 'Pfizer', 'https://placehold.co/200x200/8b5cf6/ffffff?text=Fluconazol'),
+          ('Cetirizina 10mg', 'Antihistamínico para alergias estacionales y rinitis', 1800, 130, 'Bagó', 'https://placehold.co/200x200/ec4899/ffffff?text=Cetirizina'),
+          ('Prednisona 20mg', 'Corticosteroide oral para enfermedades autoinmunes e inflamatorias', 3200, 55, 'Rider', 'https://placehold.co/200x200/f97316/ffffff?text=Prednisona'),
+          ('Warfarina 5mg', 'Anticoagulante oral para prevención de trombosis', 4500, 40, 'Saval', 'https://placehold.co/200x200/ef4444/ffffff?text=Warfarina'),
+          ('Amlodipino 10mg', 'Bloqueador de canales de calcio para hipertensión y angina', 3500, 80, 'Lab Chile', 'https://placehold.co/200x200/14b8a6/ffffff?text=Amlodipino'),
+          ('Sertralina 50mg', 'Antidepresivo ISRS para depresión, ansiedad y TOC', 6700, 60, 'Pfizer', 'https://placehold.co/200x200/6366f1/ffffff?text=Sertralina');
       `);
       console.log('Productos de semilla insertados');
     }
