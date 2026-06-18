@@ -343,4 +343,39 @@ router.put('/ordenes/:id/estado', authenticateToken, requireAdmin, async (req, r
   }
 });
 
+// TEMPORAL: Actualizar imágenes de productos con URLs reales de Wikimedia
+router.get('/update-images', async (req, res) => {
+  const updates = [
+    [11, 'https://upload.wikimedia.org/wikipedia/commons/b/be/Voltaren_tablets.jpg'],
+    [12, 'https://upload.wikimedia.org/wikipedia/commons/7/75/Pronaxen.jpg'],
+    [13, 'https://upload.wikimedia.org/wikipedia/commons/1/15/Zithromax_%28Azithromycin%29_tablets.jpg'],
+    [14, 'https://upload.wikimedia.org/wikipedia/commons/8/88/Chloramphenicol%2C_ca._1960s.jpg'],
+    [15, 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Dexamethasone_tablets.jpg'],
+    [16, 'https://upload.wikimedia.org/wikipedia/commons/3/33/Lasix-box2016.jpg'],
+    [17, 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Converide_150-12%2C5_mg_tbl.jpg'],
+    [18, 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Tensiomin-12.5.jpg'],
+    [19, 'https://upload.wikimedia.org/wikipedia/commons/5/5e/%D0%AD%D0%BD%D0%B0%D0%BF.jpg'],
+    [20, 'https://upload.wikimedia.org/wikipedia/commons/1/18/Simvastatin_varieties.jpg'],
+    [21, 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Zantac_300_mg_AU.jpg'],
+    [22, 'https://upload.wikimedia.org/wikipedia/commons/0/0d/Algifen-neo.jpg'],
+    [23, 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Cipro_250_mg.JPG'],
+    [24, 'https://upload.wikimedia.org/wikipedia/commons/0/07/Kutija_klindamicina.jpg'],
+    [25, 'https://upload.wikimedia.org/wikipedia/commons/2/24/Flucamed.jpg'],
+    [26, 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Cetirizine10.JPG'],
+    [27, 'https://upload.wikimedia.org/wikipedia/commons/3/33/Prednisone_5mg_%282379662106%29.jpg'],
+    [28, 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Waran_.jpg'],
+    [29, 'https://upload.wikimedia.org/wikipedia/commons/9/90/Norvasc.jpg'],
+    [30, 'https://upload.wikimedia.org/wikipedia/commons/0/03/Zoloft_%28sertraline%29.jpg']
+  ];
+  try {
+    for (const [id, url] of updates) {
+      await pool.query('UPDATE productos SET imagen_url = $1 WHERE id = $2', [url, id]);
+    }
+    res.json({ message: 'Imágenes actualizadas para productos 11-30' });
+  } catch (err) {
+    console.error('Error actualizando imágenes:', err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 module.exports = router;
