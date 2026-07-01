@@ -1,12 +1,11 @@
 #!/bin/bash
-# Script de backup automático RDS PostgreSQL → local + S3 (si hay permiso)
+# Script de backup automático RDS PostgreSQL → local
 # Ejecutar: bash /srv/cruz_azul-erp/cron-backup.sh
 
 set -a
 source /srv/cruz_azul-erp/.env
 set +a
 
-S3_BUCKET="cruz-azul-bd-bucket"
 BACKUP_DIR="/srv/backups"
 LOG_FILE="/var/log/cron-backup.log"
 
@@ -34,14 +33,6 @@ pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" | gzip > "$FILEPATH
 
 if [ $? -eq 0 ]; then
     echo "[$(date)] Backup local creado: $FILEPATH ($(du -h "$FILEPATH" | cut -f1))" | tee -a "$LOG_FILE"
-
-    aws s3 cp "$FILEPATH" "s3://${S3_BUCKET}/backups/${FILENAME}" >> "$LOG_FILE" 2>&1
-
-    if [ $? -eq 0 ]; then
-        echo "[$(date)] Backup subido a S3: s3://${S3_BUCKET}/backups/${FILENAME}" | tee -a "$LOG_FILE"
-    else
-        echo "[$(date)] S3 no accesible (permisos voclabs). Solo backup local." | tee -a "$LOG_FILE"
-    fi
 else
     echo "[$(date)] ERROR: Falló la generación del backup" | tee -a "$LOG_FILE"
     exit 1

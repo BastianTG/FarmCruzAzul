@@ -1,17 +1,63 @@
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  ssl: { rejectUnauthorized: false },
-});
+const SECRET_ARN = process.env.DB_SECRET_ARN;
+
+let pool;
+let initPromise;
+
+async function getDbCredentials() {
+  const host = process.env.DB_HOST;
+  const port = parseInt(process.env.DB_PORT) || 5432;
+  const database = process.env.DB_NAME || 'cruzazul_erp';
+
+  if (SECRET_ARN) {
+    try {
+      console.log('Obteniendo credenciales DB desde AWS Secrets Manager...');
+      const client = new SecretsManagerClient({ region: 'us-east-1' });
+      const command = new GetSecretValueCommand({ SecretId: SECRET_ARN });
+      const response = await client.send(command);
+      const secret = JSON.parse(response.SecretString);
+      return {
+        host,
+        port,
+        database,
+        user: secret.username || 'postgres',
+        password: secret.password,
+      };
+    } catch (err) {
+      console.error('Error obteniendo credenciales de Secrets Manager:', err.message);
+    }
+  }
+
+  if (process.env.DB_USER && process.env.DB_PASSWORD) {
+    console.log('Usando credenciales DB desde variables de entorno');
+    return { host, port, database, user: process.env.DB_USER, password: process.env.DB_PASSWORD };
+  }
+
+  console.log('Usando credenciales DB por defecto (local)');
+  return { host, port, database, user: 'postgres', password: 'postgres' };
+}
+
+async function initializePool() {
+  const creds = await getDbCredentials();
+  console.log(`Conectando a BD: ${creds.host}:${creds.port}/${creds.database} (user: ${creds.user})`);
+
+  pool = new Pool({
+    host: creds.host,
+    port: creds.port,
+    database: creds.database,
+    user: creds.user,
+    password: creds.password,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    ssl: { rejectUnauthorized: false },
+  });
+
+  await initDB();
+}
 
 async function initDB() {
   try {
@@ -108,6 +154,13 @@ async function initDB() {
   }
 }
 
-initDB();
+initPromise = initializePool().catch(err => {
+  console.error('Error inicializando pool:', err);
+});
 
-module.exports = pool;
+module.exports = new Proxy({}, {
+  get(_, prop) {
+    if (prop === 'initPromise') return initPromise;
+    return (...args) => initPromise.then(() => pool[prop](...args));
+  }
+});

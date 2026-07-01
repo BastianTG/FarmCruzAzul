@@ -18,12 +18,8 @@ npm install
 
 echo "[$(date)] Configurando variables de entorno..."
 cat > "$PROJECT_DIR/.env" << 'EOF'
-# --- BD RDS PostgreSQL ---
-DB_HOST=cruzazul-erp-db.cvrinvv3ihzy.us-east-1.rds.amazonaws.com
-DB_PORT=5432
-DB_NAME=cruzazul_erp
-DB_USER=postgres
-DB_PASSWORD=postgres
+# --- BD - Secrets Manager ---
+DB_SECRET_ARN=arn:aws:secretsmanager:us-east-1:130865775465:secret:rds!db-925c1444-19c4-490c-8fab-8422683636fb-CCaQmx
 
 # --- JWT ---
 JWT_SECRET=cambiame_por_un_secreto_seguro

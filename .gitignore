@@ -3,7 +3,6 @@ node_modules/
 
 # Variables de entorno
 .env
-.gitignore
 
 # Logs
 logs
@@ -19,3 +18,35 @@ PASO_A_PASO.md
 EVA3_TI3053_S3_RDS_N5_C2-3.txt
 architecture.excalidraw
 achitecture.excalidraw.png
+
+# Credenciales y claves
+*.pem
+*.key
+*.p12
+*.pfx
+credentials
+aws/
+.aws/
+
+# Entorno
+.env*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Temp
+tmp/
+temp/
